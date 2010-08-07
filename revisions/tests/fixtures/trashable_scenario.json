@@ -1,0 +1,35 @@
+[
+    {
+        "pk": 1, 
+        "model": "tests.trashablestory", 
+        "fields": {
+            "body": "", 
+            "slug": "flabbergasted", 
+            "title": "Flabbergasted!", 
+            "id": "3b4dc60e76f540ecb4235710707751af", 
+            "_is_trash": false
+        }
+    },
+    {
+        "pk": 2, 
+        "model": "tests.trashablestory", 
+        "fields": {
+            "body": "", 
+            "slug": "flabbergasted-twice", 
+            "title": "Flabbergasted! Twice!", 
+            "id": "3b4dc60e76f540ecb4235710707751af", 
+            "_is_trash": false
+        }
+    },
+    {
+        "pk": 3, 
+        "model": "tests.trashablestory", 
+        "fields": {
+            "body": "", 
+            "slug": "flabbergasted-thrice", 
+            "title": "Flabbergasted! Thrice!", 
+            "id": "3b4dc60e76f540ecb4235710707751af", 
+            "_is_trash": false
+        }
+    }
+]

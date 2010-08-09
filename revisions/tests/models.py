@@ -16,14 +16,21 @@ class Story(VersionedModel):
     def __unicode__(self):
         return self.title
 
-    clear_each_revision = ['title', 'slug']
+    
 
     class Meta:
         verbose_name_plural = 'stories'
+    
+    class Versioning:
+        clear_each_revision = ['title', 'slug']
+        publication_date = None
 
 class ConvenientStory(Story, shortcuts.VersionedModel):
     class Meta:
         proxy = True
+
+class FancyStory(Story):
+    is_very_fancy = models.BooleanField(default=True)
 
 """
 # this model allows us to test whether the versioning system also works
@@ -60,25 +67,3 @@ class Info(models.Model):
     # dit om een gewoon gerelateerd model te testen
     content = models.CharField(max_length=250)
     story = models.ForeignKey(Story)
-
-"""
-class LoggedModel(models.Model):
-    log_message = models.TextField(_('Log message'), 
-        help_text = _('Leave a short message to describe your edit.'),
-        blank=True)
-
-    @property
-    def log_messages(self):
-        return [message[0] for message in self.log_message_history]
-    
-    # TODO: log_message en deze property in een apart
-    # submodel steken (ook abstract) + een concrete instantiatie
-    # die gebruikt kan worden om deze functionaliteit te unit testen.
-
-    class Meta:
-        abstract = True
-
-class LoggedVersionedModel(VersionedModel, LoggedModel):
-    class Meta:
-        abstract = True
-"""

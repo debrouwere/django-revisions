@@ -1,18 +1,35 @@
 from copy import copy
 from utils import TestCase
 from django.test.client import Client
-from revisions.tests import models
+from django.contrib.auth.models import User
 import revisions
+from revisions.tests import models
 
 #
 # App tests
 #
 
 class AppTests(TestCase):
-    fixtures = ['revisions_scenario']
+    fixtures = ['revisions_scenario', 'asides_scenario']
 
     def setUp(self):
         self.story = models.Story.latest.all()[0]
+
+    def test_get_revisions(self):
+        raise NotImplementedError
+    
+    def test_get_next_revision(self):
+        next = self.story.get_revisions().next
+        self.assertEquals(next, None)
+
+    def test_get_prev_revision(self):
+        prev = self.story.get_revisions().prev
+        self.assertEquals(prev.vid, 2)
+
+    def test_get_prev_next_revision(self):
+        revision_vid = self.story.vid
+        prevnext_vid = self.story.get_revisions().prev.get_revisions().next.vid
+        self.assertEquals(revision_vid, prevnext_vid)
 
     def test_id_assignment(self):
         obj = models.Story(
@@ -79,6 +96,10 @@ class AppTests(TestCase):
         self.assertEquals(actual['latest_revisions'][0].title, 'This is a little story (final)')
         self.assertTrue(expected['old_revision_pks'].isdisjoint(actual['latest_revision_pks']))
 
+    def test_fetch(self):
+        # TODO: test schrijven voor pk, date, datetime en het model zelf
+        raise NotImplementedError
+
     def test_revert_to(self):
         older_revision = self.story.get_revisions()[0]
         revision_count = len(self.story.get_revisions())
@@ -116,8 +137,13 @@ class AppTests(TestCase):
     def test_revisionform(self):
         raise NotImplementedError
 
+# TODO!!
+#class InheritanceTests(AppTests):
+#    def setUp(self):
+#        self.story = models.FancyStory.latest.all()[0]    
+
 class ConvenienceTests(TestCase):
-    fixtures = ['revisions_scenario']
+    fixtures = ['revisions_scenario', 'asides_scenario']
 
     def setUp(self):
         self.story = models.Story.latest.all()[0]
@@ -177,17 +203,10 @@ class ConvenienceTests(TestCase):
 
 class TrashTests(TestCase):
     fixtures = ['trashable_scenario']
-    
-    # TODO: 
-    # coverage for this could be better, e.g. by testing story counts
-    # with the different managers before and after a story is trashed
 
     def setUp(self):
         self.story = models.TrashableStory.latest.all()[0]
         self.mgr = models.TrashableStory._default_manager
-    
-    def tearDown(self):
-        pass
     
     def test_publicmanager(self):
         self.assertRaises(models.TrashableStory.DoesNotExist, 
@@ -224,37 +243,49 @@ users = [
     {"username": "Fred", "password": "pastures of green"},
     ]
 
-class BrowserTests(object):
-    apps = [
-        'django.contrib.auth',
-        'django.contrib.sessions',
-        'django.contrib.admin',
-        ]
-
+class BrowserTests(TestCase):
+    fixtures = ['revisions_scenario', 'users']
+    apps = ('revisions.tests', 'django.contrib.auth', 'django.contrib.sessions', 'django.contrib.admin', )
+    urls = 'revisions.tests.urls'
+    
     def setUp(self):
-        # account aanmaken?
-        pass
-    
-    def tearDown(self):
-        pass
-    
-    def test_middleware(self):
-        c = Client()
-        revision_data = {
-            'some': 'some', 
-            'data': 'data'
+        # some objects we might use directly, instead of via the client
+        self.story = models.Story.objects.all()[0]
+        user_objs = User.objects.all()
+        self.user, self.alt_user = user_objs
+        # client setup
+        self.c = Client()
+        self.c.login(**users[0])
+        self.data = {
+            'body': u'Hello there!', 
+            'small_change': False,
+            'title': u'Little big story',
+            'aside_set-TOTAL_FORMS': 0,
+            'info_set-TOTAL_FORMS': 0,
+            'aside_set-INITIAL_FORMS': 0,
+            'info_set-INITIAL_FORMS': 0,
             }
-        c.login(username='joe', password='secret')
-        response = c.post('/admin/stories/story/2/', revision_data, follow=True)
-        self.assertRedirects(response, '/admin/stories/story/5/')
+    
+    def test_save_revision(self):
+        response = self.c.post('/admin/tests/story/3/', self.data, follow=True)
+        self.assertContains(response, '<a href="6/">Little big story</a>')
+    
+    def test_save_and_continue_redirect_middleware(self):
+        # This test is failing for me, though it works when testing manually
+        # Some aspect of middleware testing I'm unaware of?
+        
+        self.data.update({'_continue': True})
+        response = self.c.post('/admin/tests/story/3/', self.data, follow=True)
+        self.assertRedirects(response, '/admin/tests/story/6/')
     
     def test_frontend_redirects(self):
         # utils redirects testen in browser
         raise NotImplementedError
     
-    def test_admin_middleware(self):
-        raise NotImplementedError
-    
     def test_revisionform(self):
+        # tests whether fields specified in Versioning.clear_each_revision
+        # (e.g. 'title') are empty as they should be; 
         # client-side counterpart to AppTests.test_revisionform
-        raise NotImplementedError
+        
+        response = self.c.get('/admin/tests/story/3/')
+        self.assertContains(response, '<input id="id_title" type="text" class="vTextField" name="title" maxlength="250" />')

@@ -1,0 +1,80 @@
+[
+    {
+        "pk": 1, 
+        "model": "tests.aside", 
+        "fields": {
+            "message": "This aside is affixed to the first revision of the story.", 
+            "story": 1, 
+            "id": "4ed62e7d17714ca39b148038f6211563"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "tests.aside", 
+        "fields": {
+            "message": "This aside is also affixed to the first revision of the story.", 
+            "story": 1, 
+            "id": "276cdcf341f8457bb5cc62d95e5b3b75"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "tests.aside", 
+        "fields": {
+            "message": "This aside is affixed to the third revision of the story.", 
+            "story": 3, 
+            "id": "79d99304fda940b094e5a9fde0233f7b"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "tests.aside", 
+        "fields": {
+            "message": "This aside (rev 2) is affixed to the first revision of the story.", 
+            "story": 1, 
+            "id": "4ed62e7d17714ca39b148038f6211563"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "tests.aside", 
+        "fields": {
+            "message": "This aside (rev 2) is also affixed to the first revision of the story.", 
+            "story": 1, 
+            "id": "276cdcf341f8457bb5cc62d95e5b3b75"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "tests.aside", 
+        "fields": {
+            "message": "This aside (rev 2) is affixed to the third revision of the story.", 
+            "story": 3, 
+            "id": "79d99304fda940b094e5a9fde0233f7b"
+        }
+    },
+    {
+        "pk": 1, 
+        "model": "tests.info", 
+        "fields": {
+            "content": "Some non-versioned info attached to rev 1.", 
+            "story": 1
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "tests.info", 
+        "fields": {
+            "content": "Some non-versioned info attached to rev 2.", 
+            "story": 2
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "tests.info", 
+        "fields": {
+            "content": "Some non-versioned info attached to rev 2.", 
+            "story": 2
+        }
+    }
+]

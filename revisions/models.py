@@ -1,10 +1,12 @@
 # encoding: utf-8
 
-from django.db import models
-from django.utils.translation import ugettext as _
-from revisions import managers
 import uuid
 import difflib
+from datetime import date
+from django.db import models
+from django.utils.translation import ugettext as _
+from django.core.exceptions import ImproperlyConfigured
+from revisions import managers
 
 class VersionedModel(models.Model):
     vid = models.AutoField(primary_key=True)
@@ -14,28 +16,52 @@ class VersionedModel(models.Model):
     latest = managers.LatestManager()
     objects = models.Manager()
     
-    # all related revisions
-    # it would be nice to be able to do obj.get_revisions().prev and .next as well, 
-    # as added properties on the queryset object.
+    # all related revisions, plus easy shortcuts to the previous and next revision
     def get_revisions(self):
-        return self.__class__.objects.filter(id=self.id).order_by('vid')
+        qs = self.__class__.objects.filter(id=self.id).order_by('vid')
+        
+        try:
+            qs.prev = qs.filter(vid__lt=self.vid).order_by('-vid')[0]
+        except IndexError:
+            qs.prev = None
+        try:
+            qs.next = qs.filter(vid__gt=self.vid)[0]
+        except IndexError:
+            qs.next = None
+        
+        return qs
     
     def check_if_latest_revision(self):
         return self.vid >= max([version.vid for version in self.get_revisions()])
     
-    def revert_to(self, pk_or_instance):
-        if isinstance(pk_or_instance, models.Model):
-            pk = pk_or_instance.pk
+    @classmethod
+    def fetch(cls, criterion):
+        if isinstance(criterion, int):
+            return cls.objects.get(pk=criterion)
+        elif isinstance(criterion, models.Model):
+            return criterion
+        elif isinstance(criterion, date):
+            pub_date = cls.Versioning.publication_date
+            if pub_date:
+                return cls.objects.filter(**{pub_date + '__lte': criterion}).order('-vid')[0]
+            else:
+                raise ImproperlyConfigured("""Please specify which field counts as the publication
+                    date for this model. You can do so inside a Versioning class. Read the docs 
+                    for more info.""")
         else:
-            pk = pk_or_instance
+            raise TypeError("Can only fetch an object using a primary key, a date or a datetime object.")
+
+    def revert_to(self, criterion):
+        revert_to_obj = self.__class__.fetch(criterion)
     
-        if pk in [version.pk for version in self.get_revisions()]:
-            revert_to_obj = self.__class__.objects.get(pk=pk)
+        # You can only revert a model instance back to a previous instance.
+        # Not any ol' object will do, and we check for that.
+        if revert_to_obj.pk not in self.get_revisions().values_list('pk', flat=True):
+            raise IndexError("Cannot revert to a primary key that is not part of the content bundle.")
+        else:
             revert_to_obj.save()
             return revert_to_obj
-        else:
-            # hmm, might not be the most descriptive of exceptions
-            raise IndexError("Cannot revert to a primary key that is not part of the content bundle.")
+            
     
     def get_latest_revision(self):
         return self.get_revisions().order_by('-vid')[0]
@@ -54,12 +80,13 @@ class VersionedModel(models.Model):
         if self.__dict__.get(name, False):
             return [(version.__dict__[name], version) for version in self.get_revisions()]
         else:
-            raise AttributeError
+            raise AttributeError(name)
 
     def _get_related_objects(self, relatedmanager):
         """ This method extends a regular related-manager by also including objects
         that are related to other versions of the same content, instead of just to
         this one object. """
+        
         related_model = relatedmanager.model
         related_model_name = related_model._meta.module_name
         
@@ -80,9 +107,6 @@ class VersionedModel(models.Model):
         
         return objs
     
-    # overriding getattr is tricky business, and should be extensively unit tested
-    # to make sure we're not getting unexpected side-effects or get in the way of
-    # existing Django magic
     def __getattr__(self, name):
         # we catch all lookups that start with 'related_'
         if name.startswith('related_'):
@@ -103,40 +127,30 @@ class VersionedModel(models.Model):
             return self._get_attribute_history(attribute)
 
         raise AttributeError(name)
-    
-    # mleh, een generische oplossing voor de LoggedModel use-case zou wel interessant zijn
-    # (dus velden die by default gecleared worden in de admin of als men
-    # een prepare_for_change() methode aanroept, ipv. overgenomen van 
-    # de vorige revisie) en een LoggedModel implementatie zou handig kunnen
-    # zijn als voorbeeldcode (mss. zelfs gewoon in de documentatie)
-    # maar lijkt me voor de rest toch iets te specifiek om nuttig te zijn
+            
     def prepare_for_writing(self):
         """
         This method allows you to clear out certain fields in the model that are
         specific to each revision, like a log message.
         """
-        
-        clear_fields = getattr(self, 'clear_each_revision', False)
-        if clear_fields:
-            for field in clear_fields:
-                super(VersionedModel, self).__setattr__(field, '')
+        for field in self.Versioning.clear_each_revision:
+            super(VersionedModel, self).__setattr__(field, '')
     
     def save(self, new_revision=True, *vargs, **kwargs):
-        # TODO: mensen duidelijk maken dat een wijzigingsdatum implementeren bij
-        # versioned content ietsje anders moet, nl. dat je het best manueel doet
-        # (hier evt. mee helpen met een methode daarvoor die men kan aanroepen, 
-        # of een getter/setter voor wijzigingsdatum die men kan overriden waar
-        # deze save-methode mee kan interageren, of een registratie-decorator
-        # voor AOP)
-        if new_revision:
+        # If we set the primary key (vid) to None, Django is smart
+        # enough to save a new revision for us, instead of updating
+        # the existing one.
+        # 
+        # We don't make a new revision for small changes.
+        if new_revision and not getattr(self, 'is_small_change', False):
             self.vid = None
         
         # The first revision of a piece of content won't have a bundle id yet, 
-        # and because we haven't saved yet, there's no primary key either,
-        # so we use a UUID as the bundle ID.
-        #
-        # (Note that Django chokes on using super/save() more than once 
-        # in the save method, so doing a preliminary save to get the PK
+        # and because the object isn't persisted in the database, there's no 
+        # primary key either, so we use a UUID as the bundle ID.
+        # 
+        # (Note for smart alecks: Django chokes on using super/save() more than
+        # once in the save method, so doing a preliminary save to get the PK
         # and using that value for a bundle ID is sadly impossible.)
         if not self.id:
             self.id = uuid.uuid4().hex
@@ -152,6 +166,10 @@ class VersionedModel(models.Model):
     
     class Meta:
         abstract = True
+    
+    class Versioning:
+        clear_each_revision = []
+        publication_date = None
 
 class TrashableModel(models.Model):
     """ Users wanting a version history may also expect a trash bin

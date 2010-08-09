@@ -29,8 +29,6 @@ class VersionedModelRedirectMiddleware(object):
                 # 2. get the latest revision for that content
                 if issubclass(cls, VersionedModel):
                     obj = cls.objects.get(pk=pk).get_latest_revision()
-                    print obj.title
-                    print obj.pk
                     # 3. redirect
                     return redirect(reverse('admin:%s_%s_change' % (app, model), args=[obj.pk]))
 

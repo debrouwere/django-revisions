@@ -12,7 +12,5 @@ Ponies
 ======
 
 - util.py evalueren
-- rollback methodes (revert_to(pk) op laatste revisie, en make_current_revision() op elke revisie) --- deze maken gewoon een nieuwe revisie aan met een c&p
-- "kleine wijziging" implementeren
 - diffing view
 - maybe some template tags for some things

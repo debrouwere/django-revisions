@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # TODO: wil deze view ombouwen tot een generische decorator die oudere revisies
 # of verkeerde urls kan laten doorverwijzen naar de juiste URL, enkel op basis
 # van het model

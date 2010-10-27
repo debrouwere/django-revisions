@@ -1,5 +1,7 @@
 import os
+import subprocess
 from setuptools import setup, find_packages
+
 version = '0.2'
 README = os.path.join(os.path.dirname(__file__), 'README')
 long_description = open(README).read()
@@ -18,7 +20,7 @@ setup(name='django-revisions',
                    'Topic :: Utilities'],
       keywords='revisions versioning history',
       author='Stijn Debrouwere',
-      #author_email='stijn@stdout.be',
+      author_email='stijn@stdout.be',
       url='http://stdbrouw.github.com/django-revisions/',
       download_url='http://www.github.com/stdbrouw/django-revisions/tarball/master',
       license='BSD',

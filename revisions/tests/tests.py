@@ -1,5 +1,6 @@
 from copy import copy
-from utils import TestCase
+#from utils import TestCase
+from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
 import revisions
@@ -245,7 +246,13 @@ users = [
 
 class BrowserTests(TestCase):
     fixtures = ['revisions_scenario', 'users']
-    apps = ('revisions.tests', 'django.contrib.auth', 'django.contrib.sessions', 'django.contrib.admin', )
+    apps = (
+        'revisions',
+        'revisions.tests',
+        'django.contrib.auth',
+        'django.contrib.sessions',
+        'django.contrib.admin',
+        )
     urls = 'revisions.tests.urls'
     
     def setUp(self):

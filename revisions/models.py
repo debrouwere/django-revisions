@@ -6,9 +6,15 @@ from datetime import date
 from django.db import models
 from django.utils.translation import ugettext as _
 from django.core.exceptions import ImproperlyConfigured
+from django.contrib.contenttypes.models import ContentType
 from revisions import managers
 
 class VersionedModel(models.Model):
+    @classmethod
+    def get_implementations(cls):
+        models = [contenttype.model_class() for contenttype in in ContentType.objects.all()]
+        return [model for model in models if isinstance(model, cls)]
+
     vid = models.AutoField(primary_key=True)
     id = models.CharField(max_length=36, editable=False, null=True, db_index=True)
     

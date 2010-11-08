@@ -1,14 +1,13 @@
 from django.views.generic import direct_to_template
+from revisions.models import VersionedModel
 
 def differ(request, compare_baseline_pk, compare_with_pk):
     raise NotImplementedError
 
-def trash_can(request, model=None):
+def trashcan(request, model=None):
     if not model:
-        pass
-        # als er geen model werd opgegeven, 
-        # alle modellen zoeken die inheriten van VersionedModel
+        models = VersionedModel.get_implementations()
     else:
-        pass
+        models = [model]
     
     raise NotImplementedError

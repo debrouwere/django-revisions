@@ -33,6 +33,7 @@ class FancyStory(Story):
 """
 # this model allows us to test whether the versioning system also works
 # with inheritance (joined tables) as well as the TrashableModel functionality.
+
 class TrashableStory(Story, TrashableModel):
     class Meta:
         verbose_name_plural = 'trashable stories'

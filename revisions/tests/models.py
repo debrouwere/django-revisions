@@ -15,9 +15,7 @@ class Story(VersionedModel):
         
     def __unicode__(self):
         return self.title
-
     
-
     class Meta:
         verbose_name_plural = 'stories'
     

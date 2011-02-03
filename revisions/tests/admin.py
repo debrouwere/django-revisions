@@ -15,4 +15,5 @@ class StoryAdmin(admin.ModelAdmin):
     inlines = [AsideInline, InfoInline,]
 
 admin.site.register(models.Story, StoryAdmin)
+admin.site.register(models.FancyStory, StoryAdmin)
 admin.site.register(models.TrashableStory)

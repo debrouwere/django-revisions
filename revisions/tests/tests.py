@@ -138,10 +138,11 @@ class AppTests(TestCase):
     def test_revisionform(self):
         raise NotImplementedError
 
-# TODO!!
-#class InheritanceTests(AppTests):
-#    def setUp(self):
-#        self.story = models.FancyStory.latest.all()[0]    
+class ConcreteInheritanceTests(AppTests):
+    fixtures = ['fancy_revisions_scenario', 'asides_scenario']
+    
+    def setUp(self):
+        self.story = models.FancyStory.latest.all()[0]    
 
 class ConvenienceTests(TestCase):
     fixtures = ['revisions_scenario', 'asides_scenario']
@@ -182,13 +183,13 @@ class ConvenienceTests(TestCase):
 
     def test_getattr_history(self):
         """ This just tests the getattr magic, which is a shortcut to
-        get_attribute_history, , which is tested separately. """
+        _get_attribute_history, which is tested separately. """
 
         self.assertEquals(self.story.body_history, self.story._get_attribute_history('body'))
 
     def test_getattr_related(self):
         """ This just tests the getattr magic, which is a shortcut to
-        get_related_objects, which is tested separately. """
+        _get_related_objects, which is tested separately. """
 
         without_getattr = self.story._get_related_objects(self.story.aside_set)
         with_getattr = self.story.related_aside_set

@@ -58,11 +58,11 @@ class TrashableStory(VersionedModel, TrashableModel):
         verbose_name_plural = 'trashable stories'
 
 class Aside(VersionedModel):
-    # dit dient om synchrone versioning te testen
+    # serves to test synchronous versioning
     message = models.CharField(max_length=250)
     story = models.ForeignKey(Story) 
 
 class Info(models.Model):
-    # dit om een gewoon gerelateerd model te testen
+    # serves to test related but unversioned objects
     content = models.CharField(max_length=250)
     story = models.ForeignKey(Story)

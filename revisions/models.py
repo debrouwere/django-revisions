@@ -12,7 +12,7 @@ from revisions import managers
 class VersionedModel(models.Model):
     @classmethod
     def get_implementations(cls):
-        models = [contenttype.model_class() for contenttype in in ContentType.objects.all()]
+        models = [contenttype.model_class() for contenttype in ContentType.objects.all()]
         return [model for model in models if isinstance(model, cls)]
 
     vid = models.AutoField(primary_key=True)
@@ -180,7 +180,7 @@ class VersionedModel(models.Model):
 class TrashableModel(models.Model):
     """ Users wanting a version history may also expect a trash bin
     that allows them to recover deleted content, as is e.g. the
-    case in WordPress. This is it. """
+    case in WordPress. This is that thing. """
     
     _is_trash = models.BooleanField(db_column='is_trash', default=False, editable=False)
     

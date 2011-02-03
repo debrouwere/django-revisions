@@ -1,29 +1,9 @@
 [
     {
-        "pk": 1, 
-        "model": "tests.story", 
-        "fields": {
-            "body": "First revision.", 
-            "slug": "this-is-a-little-story", 
-            "id": "d87049698dec4a519022c4aa20ac0184", 
-            "title": "This is a little story"
-        }
-    }, 
-    {
         "pk": 1,
         "model": "tests.fancystory",
         "fields": {
             "is_very_fancy": false
-        }
-    },
-    {
-        "pk": 2, 
-        "model": "tests.story", 
-        "fields": {
-            "body": "Second revision.", 
-            "slug": "this-is-a-little-story", 
-            "id": "d87049698dec4a519022c4aa20ac0184", 
-            "title": "This is a little story"
         }
     },
     {
@@ -34,32 +14,12 @@
         }
     },
     {
-        "pk": 3, 
-        "model": "tests.story", 
-        "fields": {
-            "body": "Third and latest revision.", 
-            "slug": "this-is-a-little-story-final", 
-            "id": "d87049698dec4a519022c4aa20ac0184", 
-            "title": "This is a little story (final)"
-        }
-    }, 
-    {
         "pk": 3,
         "model": "tests.fancystory",
         "fields": {
             "is_very_fancy": true
         }
     },
-    {
-        "pk": 4, 
-        "model": "tests.story", 
-        "fields": {
-            "body": "First rev.", 
-            "slug": "this-is-a-second-story", 
-            "id": "3d218119da724cb1bb3cb8690085f84a", 
-            "title": "This is a second story"
-        }
-    }, 
     {
         "pk": 4,
         "model": "tests.fancystory",
@@ -68,17 +28,7 @@
         }
     },
     {
-        "pk": 5, 
-        "model": "tests.story", 
-        "fields": {
-            "body": "Second rev.", 
-            "slug": "this-is-a-second-story", 
-            "id": "3d218119da724cb1bb3cb8690085f84a", 
-            "title": "This is a second story"
-        }
-    },
-    {
-        "pk": 1,
+        "pk": 5,
         "model": "tests.fancystory",
         "fields": {
             "is_very_fancy": false

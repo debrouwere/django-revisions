@@ -139,7 +139,7 @@ class AppTests(TestCase):
         raise NotImplementedError
 
 class ConcreteInheritanceTests(AppTests):
-    fixtures = ['fancy_revisions_scenario', 'asides_scenario']
+    fixtures = ['revisions_scenario', 'fancy_revisions_scenario', 'asides_scenario']
     
     def setUp(self):
         self.story = models.FancyStory.latest.all()[0]    

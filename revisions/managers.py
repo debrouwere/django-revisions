@@ -12,22 +12,20 @@ class LatestManager(models.Manager):
     
     @classmethod
     def show_latest(cls, qs):
-        """
-        to get the base table, rather than the joined one (should we need this later on):
-        
+
+        # in case of concrete inheritance, we need the base table, not the leaf
         base = qs.query.model
         while isinstance(base._meta.pk, models.OneToOneField):
             base = base._meta.pk.rel.to
-        table = base._meta.db_table
-        """
+        base_table = base._meta.db_table
+
 
         # this may or may not be the fastest way to get the last revision of every
         # piece of content, depending on how your database query optimizer works, 
         # but it sure as hell is the easiest way to do it in Django without resorting
         # to multiple queries or working entirely with raw SQL.
-        
         table = qs.query.model._meta.db_table
-        where = 'vid = (SELECT MAX(vid) FROM %(table)s as sub WHERE %(table)s.id = sub.id)' % {'table': table}
+        where = 'vid = (SELECT MAX(vid) FROM {table} as sub WHERE {table}.id = sub.id)'.format(table=base_table)
         return qs.extra(where=[where])
     
     def get_query_set(self):              

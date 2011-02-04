@@ -1,5 +1,5 @@
 =============================================
-Welcome to django-versioning's documentation!
+Welcome to  django-versioning's documentation!
 =============================================
 
 Contents:

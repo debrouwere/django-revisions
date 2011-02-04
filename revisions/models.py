@@ -80,7 +80,6 @@ class VersionedModel(models.Model):
             revert_to_obj.save()
             return revert_to_obj
             
-    
     def get_latest_revision(self):
         return self.get_revisions().order_by('-vid')[0]
     
@@ -119,9 +118,9 @@ class VersionedModel(models.Model):
         # kind of convoluted deep dive into the internals of the related class.
         #
         # By all means, I'd welcome suggestions for prettier code.
-        
         ref_name = self._meta._name_map[related_model_name][0].field.name
-        objs = related_model._default_manager.filter(**{ref_name + '__in': self.get_revisions()})
+        pks = [story.pk for story in self.get_revisions()]        
+        objs = related_model._default_manager.filter(**{ref_name + '__in': pks})
         
         return objs
     

@@ -1,0 +1,428 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to django-versioning’s documentation! &mdash; django-versioning v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-versioning v0.1 documentation" href="#" />
+    <link rel="next" title="The basic design of django-revisions" href="design.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="The basic design of django-revisions"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">django-versioning v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-django-versioning-s-documentation">
+<h1>Welcome to django-versioning&#8217;s documentation!<a class="headerlink" href="#welcome-to-django-versioning-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p><tt class="docutils literal"><span class="pre">django-revisions</span></tt> is a Django app that allows you to keep a version history for model instances. It has a simple API, but is also integrated with the Django admin interface. <tt class="docutils literal"><span class="pre">django-revisions</span></tt> doesn&#8217;t add any tables to your database, nor does it work by serializing old revisions &#8211; making this app very natural to work with and migration-friendly, as opposed to other solutions out there. (See <a class="reference internal" href="design.html"><em>The basic design of django-revisions</em></a>.)</p>
+<ul class="simple">
+<li>Access and revert to any previous model save with a convenient and minimally intrusive API.</li>
+<li>An optional trash bin for deleted content.</li>
+<li>Admin integration: restore trash, revert content to an older revision.</li>
+<li>Works flawlessly with migration tools like <a class="reference external" href="http://south.aeracode.org/">South</a></li>
+</ul>
+<p><tt class="docutils literal"><span class="pre">django-revisions</span></tt> takes care of model instance version history. If you found this page while looking for asset versioning of media files, like javascript or CSS, take a look at <tt class="docutils literal"><span class="pre">django-css</span></tt> and related apps instead.</p>
+</div>
+<div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="models">
+<h3>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h3>
+<p><cite>django-revisions</cite> works by adding <cite>models.VersionedModel</cite> as a base class to your model as well as — if you prefer — <cite>shortcuts.VersionedModel</cite>. You can enable a trash function by adding <cite>models.TrashableModel</cite> as a base class to your model <em>and</em> adding the class decorator <cite>decorators.trash_aware</cite> to any model for which you want to enable trash (that is, soft deletes).</p>
+<p>All three classes are independent, so you&#8217;ll have to add them in separately.</p>
+<p>The models and API work with both single-table models and <a class="reference external" href="http://jacobian.org/writing/concrete-inheritance/">joined tables</a> (that is, <a class="reference external" href="http://docs.djangoproject.com/en/dev/topics/db/models/#model-inheritance">concrete inheritance</a>).</p>
+<p><cite>django-revisions</cite> makes no effort to be a drop-in for existing models. It adds fields to your models, which means you&#8217;ll have to run a South migration to get you started, and you&#8217;ll have to run a small script to generate bundle IDs (they can just equal the object PK).</p>
+<p>See <a class="reference internal" href="models.html"><em>Caveats when working with VersionedModel</em></a> for more detail.</p>
+</div>
+<div class="section" id="module-revisions.admin">
+<span id="admin-integration"></span><h3>Admin integration<a class="headerlink" href="#module-revisions.admin" title="Permalink to this headline">¶</a></h3>
+<p>To make sure <tt class="docutils literal"><span class="pre">django-versioning</span></tt> works smoothly with the admin interface, you should add <tt class="docutils literal"><span class="pre">revisions.middleware.VersionedModelRedirectMiddleware</span></tt> to your middlewares in <tt class="docutils literal"><span class="pre">settings.py</span></tt>, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">MIDDLEWARE_CLASSES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s">&#39;django.middleware.common.CommonMiddleware&#39;</span><span class="p">,</span>
+    <span class="s">&#39;django.contrib.sessions.middleware.SessionMiddleware&#39;</span><span class="p">,</span>
+    <span class="s">&#39;revisions.middleware.VersionedModelRedirectMiddleware&#39;</span><span class="p">,</span>
+    <span class="s">&#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">django-revisions</span></tt> also comes with a couple of optional ModelForm classes.</p>
+<ul class="simple">
+<li>AutoRevisionForm makes sure to clear any revision-specific fields, like log messages. Since these are tied to each individual revision, revision-specific fields should be empty upon each new edit.</li>
+<li>RevisionForm inherits from AutoRevisionForm, but adds a checkbox to the form that allows users to specify they only want to make a small change, and that we ought to save it in-place rather than creating a new revision.</li>
+</ul>
+<p>Specify fields that need to be cleared as a list of attribute names like so:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyModel</span><span class="p">(</span><span class="n">VersionedModel</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Versioning</span><span class="p">:</span>
+        <span class="n">clear_each_revision</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;log_message&#39;</span><span class="p">,</span> <span class="s">&#39;codename&#39;</span><span class="p">,</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>If you need neither of these features, you may simply use the default <tt class="docutils literal"><span class="pre">forms.ModelForm</span></tt> instead for versioned models.</p>
+<p>When in doubt, just use the AutoRevisionForm.</p>
+<p>If you don&#8217;t specify any fields, or don&#8217;t have a <tt class="docutils literal"><span class="pre">Versioning</span></tt> class in your model, the <tt class="docutils literal"><span class="pre">AutoRevisionForm</span></tt> will simply function like any old <tt class="docutils literal"><span class="pre">ModelForm</span></tt>.</p>
+</div>
+<div class="section" id="deleting-and-trashing-versioned-content">
+<h3>Deleting and trashing versioned content<a class="headerlink" href="#deleting-and-trashing-versioned-content" title="Permalink to this headline">¶</a></h3>
+<p>This application also includes a simple abstract model that will put deleted objects into a <strong>trash bin</strong>, rather than outright deleting them from the database. <tt class="docutils literal"><span class="pre">TrashableModel</span></tt> works with any model, versioned or not. It adds a single <tt class="docutils literal"><span class="pre">is_trash</span></tt> field to the database table, so make sure to add that in manually or remember to execute a migration.</p>
+<p>Note that, for design reasons, you can&#8217;t trash individual revisions. If you want to undo a revision, <tt class="docutils literal"><span class="pre">obj.revert_to(obj.get_revisions().prev)</span></tt> or <tt class="docutils literal"><span class="pre">obj.get_revisions().prev.make_current_revision()</span></tt> are the preferred methods. That way, the version history is kept intact.</p>
+<p>Hard deleting indidual revisions is possible for administration purposes, using <tt class="docutils literal"><span class="pre">obj.delete_revision()</span></tt>, but is highly discouraged.</p>
+</div>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p><cite>django-revisions</cite> is still sorely lacking in documentation, though early adopters can get started by browsing through the methods available on <cite>models.TrashableModel</cite>, <cite>models.VersionedModel</cite> and the shortcuts in <cite>shortcuts.VersionedModel</cite>.</p>
+<div class="section" id="some-examples">
+<h3>Some examples<a class="headerlink" href="#some-examples" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre># models.py
+from django.db import models
+import revisions
+class Story(revisions.models.VersionedModel, revisions.shortcuts.VersionedModel):
+    title = models.CharField(max_length=200)
+    date = models.DateTimeField(auto_now=True)
+    log = models.CharField(max_length=200)
+
+    def __unicode__(self):
+        return self.title
+
+    class Versioning:
+        publication_date = 'date'
+        clear_each_revision = ['log']
+
+# interactive session
+&gt;&gt;&gt; story = Story(title="a story (v1)")
+&gt;&gt;&gt; story.save()
+&gt;&gt;&gt; story.pk
+1
+&gt;&gt;&gt; story.title = "a story (v2)"
+&gt;&gt;&gt; story.save()
+&gt;&gt;&gt; story.pk
+2
+&gt;&gt;&gt; story.get_revisions()
+[&lt;Story: a story (v1)&gt;, &lt;Story: a story (v2)&gt;]
+&gt;&gt;&gt; story.get_revisions()[0].make_current_revision()
+&gt;&gt;&gt; story.pk
+3
+&gt;&gt;&gt; story.get_revisions()
+[&lt;Story: a story (v1)&gt;, &lt;Story: a story (v2)&gt;, &lt;Story: a story (v1)&gt;]
+&gt;&gt;&gt; old_story = story.get_revisions()[0]
+&gt;&gt;&gt; # revert to a story
+&gt;&gt;&gt; story.revert_to(old_story)
+&gt;&gt;&gt; # or a primary key
+&gt;&gt;&gt; story.revert_to(2)
+&gt;&gt;&gt; # dates work as well
+&gt;&gt;&gt; story.revert_to(old_story.date)
+&gt;&gt;&gt; story.log = "Changed some stuff"
+&gt;&gt;&gt; story.save()
+&gt;&gt;&gt; # the Django admin clears out fields that have to be empty on each rev for you:
+&gt;&gt;&gt; story.prepare_for_writing()
+&gt;&gt;&gt; story.log
+''</pre>
+</div>
+</div>
+<div class="section" id="module-revisions.models">
+<span id="methods-and-attributes"></span><h3>Methods and attributes<a class="headerlink" href="#module-revisions.models" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="revisions.models.TrashableModel">
+<em class="property">class </em><tt class="descclassname">revisions.models.</tt><tt class="descname">TrashableModel</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#revisions.models.TrashableModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">django.db.models.base.Model</span></tt></p>
+<p>Users wanting a version history may also expect a trash bin
+that allows them to recover deleted content, as is e.g. the
+case in WordPress. This is that thing.</p>
+<dl class="class">
+<dt id="revisions.models.TrashableModel.Meta">
+<em class="property">class </em><tt class="descname">Meta</tt><a class="headerlink" href="#revisions.models.TrashableModel.Meta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.TrashableModel.delete">
+<tt class="descclassname">TrashableModel.</tt><tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.TrashableModel.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>It makes no sense to trash individual revisions: either you keep a version history or you don&#8217;t.
+If you want to undo a revision, you should use obj.revert_to(preferred_revision) instead.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.TrashableModel.delete_permanently">
+<tt class="descclassname">TrashableModel.</tt><tt class="descname">delete_permanently</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.TrashableModel.delete_permanently" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.TrashableModel.get_content_bundle">
+<tt class="descclassname">TrashableModel.</tt><tt class="descname">get_content_bundle</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.TrashableModel.get_content_bundle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="revisions.models.TrashableModel.is_trash">
+<tt class="descclassname">TrashableModel.</tt><tt class="descname">is_trash</tt><a class="headerlink" href="#revisions.models.TrashableModel.is_trash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="revisions.models.VersionedModel">
+<em class="property">class </em><tt class="descclassname">revisions.models.</tt><tt class="descname">VersionedModel</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">django.db.models.base.Model</span></tt></p>
+<dl class="class">
+<dt id="revisions.models.VersionedModel.Meta">
+<em class="property">class </em><tt class="descname">Meta</tt><a class="headerlink" href="#revisions.models.VersionedModel.Meta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="revisions.models.VersionedModel.Versioning">
+<em class="property">class </em><tt class="descclassname">VersionedModel.</tt><tt class="descname">Versioning</tt><a class="headerlink" href="#revisions.models.VersionedModel.Versioning" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.check_if_latest_revision">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">check_if_latest_revision</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.check_if_latest_revision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.delete">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">delete</tt><big>(</big><em>*vargs</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.delete_revision">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">delete_revision</tt><big>(</big><em>*vargs</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.delete_revision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="revisions.models.VersionedModel.fetch">
+<em class="property">classmethod </em><tt class="descclassname">VersionedModel.</tt><tt class="descname">fetch</tt><big>(</big><em>criterion</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.fetch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="revisions.models.VersionedModel.get_implementations">
+<em class="property">classmethod </em><tt class="descclassname">VersionedModel.</tt><tt class="descname">get_implementations</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.get_implementations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.get_latest_revision">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">get_latest_revision</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.get_latest_revision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.get_revisions">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">get_revisions</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.get_revisions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.make_current_revision">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">make_current_revision</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.make_current_revision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.prepare_for_writing">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">prepare_for_writing</tt><big>(</big><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.prepare_for_writing" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method allows you to clear out certain fields in the model that are
+specific to each revision, like a log message.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.revert_to">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">revert_to</tt><big>(</big><em>criterion</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.revert_to" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.save">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">save</tt><big>(</big><em>new_revision=True</em>, <em>*vargs</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="revisions.models.VersionedModel.show_diff_to">
+<tt class="descclassname">VersionedModel.</tt><tt class="descname">show_diff_to</tt><big>(</big><em>to</em>, <em>field</em><big>)</big><a class="headerlink" href="#revisions.models.VersionedModel.show_diff_to" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<div class="section" id="module-revisions.shortcuts">
+<span id="shortcuts"></span><h4>Shortcuts<a class="headerlink" href="#module-revisions.shortcuts" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="revisions.shortcuts.VersionedModel">
+<em class="property">class </em><tt class="descclassname">revisions.shortcuts.</tt><tt class="descname">VersionedModel</tt><a class="headerlink" href="#revisions.shortcuts.VersionedModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>VersionedModel defines a few common operations (check_if_latest_revision, 
+get_latest_revision) that involve a database lookup. Common practice dictates that
+these should be implemented as methods rather than as properties, because properties
+would signal to the programmer that a simple lookup is taking place.</p>
+<p>However, because we value code that feels as natural and domain-driven as possible, 
+and because the database lookups involved are fairly quick queries, we&#8217;ve also included 
+a helper class that implements these common operations as properties &#8211; a few convenient
+shortcuts if you will.</p>
+<dl class="attribute">
+<dt id="revisions.shortcuts.VersionedModel.is_latest_revision">
+<tt class="descname">is_latest_revision</tt><a class="headerlink" href="#revisions.shortcuts.VersionedModel.is_latest_revision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="revisions.shortcuts.VersionedModel.latest_revision">
+<tt class="descname">latest_revision</tt><a class="headerlink" href="#revisions.shortcuts.VersionedModel.latest_revision" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="revisions.shortcuts.VersionedModel.revisions">
+<tt class="descname">revisions</tt><a class="headerlink" href="#revisions.shortcuts.VersionedModel.revisions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="learn-more">
+<h3>Learn more<a class="headerlink" href="#learn-more" title="Permalink to this headline">¶</a></h3>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="design.html">The basic design of django-revisions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="design.html#ways-of-versioning">Ways of versioning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="design.html#advantages-to-same-table-versioning">Advantages to same-table versioning</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="design.html#reading">Reading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Caveats when working with <tt class="docutils literal"><span class="pre">VersionedModel</span></tt></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="models.html#references-to-bundles-or-specific-versions">References to bundles or specific versions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#a-side-note-why-you-shouldn-t-use-django-s-to-field-to-reference-content-bundles">A side note: why you shouldn&#8217;t use Django&#8217;s to_field to reference content bundles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#adding-your-own-managers">Adding your own managers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="development-reporting-bugs-helping-out-running-the-test-suite">
+<h2>Development: reporting bugs, helping out, running the test suite<a class="headerlink" href="#development-reporting-bugs-helping-out-running-the-test-suite" title="Permalink to this headline">¶</a></h2>
+<p>Development takes place on GitHub. Feel free to fork, and please report any bugs or feature requests over there. Run the test suite simply by adding <tt class="docutils literal"><span class="pre">revisions</span></tt> and <tt class="docutils literal"><span class="pre">revisions.tests</span></tt> to your apps, and subsequently running <tt class="docutils literal"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">test</span> <span class="pre">revisions</span></tt>. <tt class="docutils literal"><span class="pre">django-versioning</span></tt> has been known to work on Django 1.2 but only undergoes frequent testing on Django 1.3. That said, it will probably work on any 1.x installation.</p>
+</div>
+<div class="section" id="roadmap">
+<h2>Roadmap<a class="headerlink" href="#roadmap" title="Permalink to this headline">¶</a></h2>
+<p>The first priority is better documentation. After that, there are some features that may or may not get added to the app:</p>
+<ul class="simple">
+<li>view version history and do diffs in the admin</li>
+<li>a view wrapper or query shortcut that can handle redirecting to the latest revision when users stumble on outdated content (e.g. when a new revision has a different slug)</li>
+</ul>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to django-versioning&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#models">Models</a></li>
+<li><a class="reference internal" href="#module-revisions.admin">Admin integration</a></li>
+<li><a class="reference internal" href="#deleting-and-trashing-versioned-content">Deleting and trashing versioned content</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#some-examples">Some examples</a></li>
+<li><a class="reference internal" href="#module-revisions.models">Methods and attributes</a><ul>
+<li><a class="reference internal" href="#module-revisions.shortcuts">Shortcuts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#learn-more">Learn more</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#development-reporting-bugs-helping-out-running-the-test-suite">Development: reporting bugs, helping out, running the test suite</a></li>
+<li><a class="reference internal" href="#roadmap">Roadmap</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="design.html"
+                        title="next chapter">The basic design of django-revisions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="The basic design of django-revisions"
+             >next</a> |</li>
+        <li><a href="#">django-versioning v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Stijn Debrouwere.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
+    </div>
+  </body>
+</html>

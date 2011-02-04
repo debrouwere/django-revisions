@@ -1,0 +1,157 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The basic design of django-revisions &mdash; django-versioning v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-versioning v0.1 documentation" href="index.html" />
+    <link rel="next" title="Caveats when working with VersionedModel" href="models.html" />
+    <link rel="prev" title="Welcome to django-versioning’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Caveats when working with VersionedModel"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to django-versioning’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">django-versioning v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="the-basic-design-of-django-revisions">
+<h1>The basic design of django-revisions<a class="headerlink" href="#the-basic-design-of-django-revisions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ways-of-versioning">
+<h2>Ways of versioning<a class="headerlink" href="#ways-of-versioning" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">django-revisions</span></tt> works by linking different revisions of the same content together using a shared id, while identifying each individual revision using a version id (vid). The version id serves as the primary key. This is the same approach as used by content management systems like Wordpress and Drupal.</p>
+<p>There are a couple of different architectures in use that each do versioning in a different way.</p>
+<ul class="simple">
+<li><a class="reference external" href="http://github.com/thisismedium/message-db">MessageDB</a> is a dedicated versioned data store.</li>
+<li>A couple of systems use a version control system as the back-end for versioning, like <a class="reference external" href="http://github.com/jezdez/django-rcsfield">django-rcsfield</a> or the <a class="reference external" href="http://github.com/mojombo/jekyll">Jekyll</a> blog system.</li>
+<li><a class="reference external" href="http://code.google.com/p/django-reversion/">django-reversion</a> stores history in a serialized format (e.g. pickled, perhaps as a delta) on the model itself.</li>
+<li><a class="reference external" href="http://code.google.com/p/django-modelhistory/">django-modelhistory</a> (inactive), <a class="reference external" href="http://github.com/shreddawg/django-history">django-history</a> (inactive), <a class="reference external" href="http://code.google.com/p/django-history-tables/">django-history-tables</a> (inactive), <a class="reference external" href="http://code.djangoproject.com/wiki/AuditTrail">AuditTrail</a> (inactive), <a class="reference external" href="https://basieproject.org/stable/svn/basie/trunk/apps/audit/">Audit</a> (inactive), <a class="reference external" href="http://github.com/brosner/django-versioning">django-versioning</a> all store model history in a different table from the model data itself &#8211; often but not always pickled.</li>
+<li>This app stores history is in the same database, in the same table(s), and unpickled: any version including the most recent one is stored in an identical format, plainly viewable in the database.</li>
+</ul>
+<div class="section" id="advantages-to-same-table-versioning">
+<h3>Advantages to same-table versioning<a class="headerlink" href="#advantages-to-same-table-versioning" title="Permalink to this headline">¶</a></h3>
+<p>While storing old versions as serialized objects is easiest to implement, there are definite advantages to same-table same-format versioning.</p>
+<ul class="simple">
+<li>Any version is equal: old versions are easily queryable both from Django or from any other piece of software in any language, using plain SQL. Serialized data does not provide for easy querying, which makes certain use-cases tough or resource-heavy, like redirecting users who visit old content (perhaps with a different slug) to the latest version, or querying the database from systems other than Django.</li>
+<li>Migrations are a helluvalot easier with same-table versioning than with a versioning system that relies on serializing, as most do. Unless you write custom migration scripts, serialized data is very prone to schema conflicts when you update model definitions.</li>
+</ul>
+<p>While using a version control system to keep version history might initially cater to our geek sensibilities, it comes with definite drawbacks.</p>
+<ul class="simple">
+<li>Everything in the same database, on the same model means one less thing to worry about: VCS-based systems leave you to figure out a backup strategy for yet another persistence layer, as a good ol&#8217; database dump would not contain any history. In <tt class="docutils literal"><span class="pre">django-revisions</span></tt>, all history lives in your database.</li>
+<li>While people may work on the same code simultaneously, people never write or edit stories simultaneously (and indeed you may want to prevent this from happening, using e.g. <a class="reference external" href="http://github.com/stdbrouw/django-locking">django-locking</a>), rendering all the stuff that we love so much in version control systems (like branching, forking, merging and easily fixing conflicts) pointless. It&#8217;s overkill.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="reading">
+<h2>Reading<a class="headerlink" href="#reading" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://code.djangoproject.com/wiki/FullHistory">http://code.djangoproject.com/wiki/FullHistory</a>
+<a class="reference external" href="http://blog.brunogola.com.br/2009/10/django-model-history-with-django-reversion/">http://blog.brunogola.com.br/2009/10/django-model-history-with-django-reversion/</a>
+<a class="reference external" href="http://lethain.com/entry/2008/oct/15/choosing-between-audittrail-and-django-rcsfield/">http://lethain.com/entry/2008/oct/15/choosing-between-audittrail-and-django-rcsfield/</a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The basic design of django-revisions</a><ul>
+<li><a class="reference internal" href="#ways-of-versioning">Ways of versioning</a><ul>
+<li><a class="reference internal" href="#advantages-to-same-table-versioning">Advantages to same-table versioning</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reading">Reading</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to django-versioning&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">Caveats when working with <tt class="docutils literal"><span class="pre">VersionedModel</span></tt></a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/design.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Caveats when working with VersionedModel"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to django-versioning’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">django-versioning v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Stijn Debrouwere.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
+    </div>
+  </body>
+</html>

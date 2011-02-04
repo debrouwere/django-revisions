@@ -153,14 +153,6 @@ class VersionedModel(models.Model):
         """
         for field in self.Versioning.clear_each_revision:
             super(VersionedModel, self).__setattr__(field, '')
-
-    """
-    def save_base(self, *vargs, **kwargs):
-        default_manager = self.__class__._base_manager
-        self.__class__._base_manager = self.__class__.objects    
-        super(VersionedModel, self).save_base(*vargs, **kwargs)
-        self.__class__._base_manager = default_manager
-    """
     
     def save(self, new_revision=True, *vargs, **kwargs):
         # If we set the primary key (vid) to None, Django is smart
@@ -236,8 +228,3 @@ class TrashableModel(models.Model):
     
     class Meta:
         abstract = True
-
-# SIGNALS
-
-from django.db.models.signals import pre_save, post_save
-from django.dispatch import receiver

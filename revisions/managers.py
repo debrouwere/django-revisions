@@ -26,15 +26,6 @@ class LatestManager(models.Manager):
         where = 'vid = (SELECT MAX(vid) FROM {table} as sub WHERE {table}.id = sub.id)'.format(table=base_table)
         return qs.extra(where=[where])
 
-    """
-        about_to_save = getattr(qs.query.model, 'about_to_save', False)
-        if inspect.stack()[3][3].startswith('save'):
-        #if about_to_save:
-        #    qs.query.model.about_to_save = False
-            return qs.query.model.objects
-        #else:
-    """    
-
     def get_query_set(self):              
         # Django uses the default manager (which on versioned models is this one)
         # to determine what to do when it saves a model instance. Because older

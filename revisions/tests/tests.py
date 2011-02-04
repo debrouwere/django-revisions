@@ -203,6 +203,12 @@ class ConvenienceTests(TestCase):
         self.assertEquals(regular.get_revisions()[1].title, short.revisions[1].title)
         self.assertNotEquals(regular.get_revisions()[1].title, short.revisions[2].title)
 
+class ConcreteInheritanceConvenienceTests(ConvenienceTests):
+    fixtures = ['revisions_scenario', 'fancy_revisions_scenario', 'asides_scenario']
+    
+    def setUp(self):
+        self.story = models.FancyStory.latest.all()[0]        
+
 class TrashTests(TestCase):
     fixtures = ['trashable_scenario']
 

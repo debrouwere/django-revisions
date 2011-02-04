@@ -8,12 +8,24 @@ from django.utils.translation import ugettext as _
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.contenttypes.models import ContentType
 from revisions import managers
+import inspect
 
-class VersionedModel(models.Model):
+class VersionedModel(models.Model):        
     @classmethod
     def get_implementations(cls):
         models = [contenttype.model_class() for contenttype in ContentType.objects.all()]
         return [model for model in models if isinstance(model, cls)]
+
+    @property
+    def _base_model(self):
+        base = self
+        while isinstance(base._meta.pk, models.OneToOneField):
+            base = base._meta.pk.rel.to
+        return base    
+
+    @property
+    def _base_table(self):
+        return self._base_model._meta.db_table
 
     vid = models.AutoField(primary_key=True)
     id = models.CharField(max_length=36, editable=False, null=True, db_index=True)
@@ -141,6 +153,14 @@ class VersionedModel(models.Model):
         """
         for field in self.Versioning.clear_each_revision:
             super(VersionedModel, self).__setattr__(field, '')
+
+    """
+    def save_base(self, *vargs, **kwargs):
+        default_manager = self.__class__._base_manager
+        self.__class__._base_manager = self.__class__.objects    
+        super(VersionedModel, self).save_base(*vargs, **kwargs)
+        self.__class__._base_manager = default_manager
+    """
     
     def save(self, new_revision=True, *vargs, **kwargs):
         # If we set the primary key (vid) to None, Django is smart
@@ -149,7 +169,11 @@ class VersionedModel(models.Model):
         # 
         # We don't make a new revision for small changes.
         if new_revision and not getattr(self, 'is_small_change', False):
-            self.vid = None
+            # little known Django implementation detail: 
+            # to clone a model in cases of concrete inheritance, you must
+            # set both the self.pk reference and the actual primary key
+            # to None
+            self.pk = self.vid = None
         
         # The first revision of a piece of content won't have a bundle id yet, 
         # and because the object isn't persisted in the database, there's no 
@@ -157,7 +181,7 @@ class VersionedModel(models.Model):
         # 
         # (Note for smart alecks: Django chokes on using super/save() more than
         # once in the save method, so doing a preliminary save to get the PK
-        # and using that value for a bundle ID is sadly impossible.)
+        # and using that value for a bundle ID is rather hard.)
         if not self.id:
             self.id = uuid.uuid4().hex
         
@@ -212,3 +236,8 @@ class TrashableModel(models.Model):
     
     class Meta:
         abstract = True
+
+# SIGNALS
+
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver

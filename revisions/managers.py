@@ -19,15 +19,22 @@ class LatestManager(models.Manager):
             base = base._meta.pk.rel.to
         base_table = base._meta.db_table
 
-
         # this may or may not be the fastest way to get the last revision of every
         # piece of content, depending on how your database query optimizer works, 
         # but it sure as hell is the easiest way to do it in Django without resorting
         # to multiple queries or working entirely with raw SQL.
-        table = qs.query.model._meta.db_table
         where = 'vid = (SELECT MAX(vid) FROM {table} as sub WHERE {table}.id = sub.id)'.format(table=base_table)
         return qs.extra(where=[where])
-    
+
+    """
+        about_to_save = getattr(qs.query.model, 'about_to_save', False)
+        if inspect.stack()[3][3].startswith('save'):
+        #if about_to_save:
+        #    qs.query.model.about_to_save = False
+            return qs.query.model.objects
+        #else:
+    """    
+
     def get_query_set(self):              
         # Django uses the default manager (which on versioned models is this one)
         # to determine what to do when it saves a model instance. Because older
@@ -41,13 +48,19 @@ class LatestManager(models.Manager):
         #
         # We solve this little issue by simply using the plain models.Manager queryset
         # when saving. Simple fix, but it does require some trickery with the inspect
-        # module.
+        # module and it does make this module prone to breakage whenever a new Django
+        # version comes out.
         #
         # revisions.tests.AppTests.test_update_old_revision_in_place tests whether this works.
-        
+        #
+        # The Django team advises against using a manager that filters out rows as the default one:
+        # http://docs.djangoproject.com/en/dev/topics/db/managers/#do-not-filter-away-any-results-in-this-type-of-manager-subclass
+        # ... but we feel that versioning should be an absolutely transparant concern, 
+        # and work on related resources and in the admin without any fuss, leading us
+        # to waive this concern.
+
         qs = super(LatestManager, self).get_query_set()
-                
-        if inspect.stack()[3][3] == 'save':
+        if inspect.stack()[3][3].startswith('save'):
             return qs
         else:
             return LatestManager.show_latest(qs)

@@ -2,7 +2,7 @@ import os
 import subprocess
 from setuptools import setup, find_packages
 
-version = '0.2'
+version = '0.3'
 README = os.path.join(os.path.dirname(__file__), 'README')
 long_description = open(README).read()
 setup(name='django-revisions',

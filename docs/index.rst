@@ -1,13 +1,6 @@
 =============================================
-Welcome to  django-versioning's documentation!
+Welcome to django-versioning's documentation!
 =============================================
-
-Contents:
-
-.. toctree::
-   :glob:
-   
-   *
 
 ``django-revisions`` is a Django app that allows you to keep a version history for model instances. It has a simple API, but is also integrated with the Django admin interface. ``django-revisions`` doesn't add any tables to your database, nor does it work by serializing old revisions -- making this app very natural to work with and migration-friendly, as opposed to other solutions out there. (See :doc:`design`.)
 
@@ -59,6 +52,8 @@ API
 
 Some examples
 -------------
+
+.. code-block:: python
 
     # models.py
     from django.db import models
@@ -121,10 +116,18 @@ Shortcuts
    :members:
    :undoc-members:
 
+Learn more
+----------
+
+.. toctree::
+   :glob:
+   
+   *
+
 Development: reporting bugs, helping out, running the test suite
 ================================================================
 
-Development takes place on GitHub. Feel free to fork, and please report any bugs or feature requests over there. Run the test suite simply by executing ``python manage.py test revisions``. ``django-versioning`` has been known to work on Django 1.2 but only undergoes frequent testing on Django 1.3. That said, it will probably work on any 1.x installation.
+Development takes place on GitHub. Feel free to fork, and please report any bugs or feature requests over there. Run the test suite simply by adding ``revisions`` and ``revisions.tests`` to your apps, and subsequently running ``python manage.py test revisions``. ``django-versioning`` has been known to work on Django 1.2 but only undergoes frequent testing on Django 1.3. That said, it will probably work on any 1.x installation.
 
 Roadmap
 =======

@@ -190,7 +190,7 @@ class ConvenienceTests(TestCase):
     def test_getattr_related(self):
         """ This just tests the getattr magic, which is a shortcut to
         _get_related_objects, which is tested separately. """
-
+        
         without_getattr = self.story._get_related_objects(self.story.aside_set)
         with_getattr = self.story.related_aside_set
         

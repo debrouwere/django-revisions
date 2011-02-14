@@ -1,6 +1,6 @@
 from revisions import models
 
-class VersionedModel(object):
+class VersionedModelShortcuts(object):
     """
     VersionedModel defines a few common operations (check_if_latest_revision, 
     get_latest_revision) that involve a database lookup. Common practice dictates that
@@ -23,3 +23,13 @@ class VersionedModel(object):
     @property
     def latest_revision(self):
         return self.get_latest_revision()
+
+class VersionedModel(models.VersionedModel, VersionedModelShortcuts):
+    class Meta:
+        abstract = True
+
+TrashableModel = models.TrashableModel
+
+class TrashableVersionedModel(VersionedModel, TrashableModel):
+    class Meta:
+        abstract = True

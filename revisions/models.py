@@ -10,7 +10,27 @@ from django.contrib.contenttypes.models import ContentType
 from revisions import managers
 import inspect
 
-class VersionedModel(models.Model):        
+# the only thing lacking from the VersionedModelBase is a version id.
+# You may use VersionedModelBase if you need to specify your own 
+# AutoField (e.g. using UUIDs) or if you're trying to adapt an existing
+# model to ``django-revisions`` and have an AutoField not named
+# ``vid``.
+class VersionedModelBase(models.Model):        
+    @classmethod
+    def get_base_model(cls):
+        base = cls
+        while isinstance(base._meta.pk, models.OneToOneField):
+            base = base._meta.pk.rel.to
+        return base    
+
+    @property
+    def base_model(self):
+        return self.get_base_model()
+
+    @property
+    def pk_name(self):
+        return self.base_model._meta.pk.attname
+
     @classmethod
     def get_implementations(cls):
         models = [contenttype.model_class() for contenttype in ContentType.objects.all()]
@@ -27,7 +47,6 @@ class VersionedModel(models.Model):
     def _base_table(self):
         return self._base_model._meta.db_table
 
-    vid = models.AutoField(primary_key=True)
     id = models.CharField(max_length=36, editable=False, null=True, db_index=True)
     
     # managers
@@ -36,21 +55,21 @@ class VersionedModel(models.Model):
     
     # all related revisions, plus easy shortcuts to the previous and next revision
     def get_revisions(self):
-        qs = self.__class__.objects.filter(id=self.id).order_by('vid')
+        qs = self.__class__.objects.filter(id=self.id).order_by('pk')
         
         try:
-            qs.prev = qs.filter(vid__lt=self.vid).order_by('-vid')[0]
+            qs.prev = qs.filter(**{self.pk_name + '__lt': self.pk}).order_by('-pk')[0]
         except IndexError:
             qs.prev = None
         try:
-            qs.next = qs.filter(vid__gt=self.vid)[0]
+            qs.next = qs.filter(**{self.pk_name + '__gt': self.pk})[0]
         except IndexError:
             qs.next = None
         
         return qs
     
     def check_if_latest_revision(self):
-        return self.vid >= max([version.vid for version in self.get_revisions()])
+        return self.pk >= max([version.pk for version in self.get_revisions()])
     
     @classmethod
     def fetch(cls, criterion):
@@ -61,7 +80,7 @@ class VersionedModel(models.Model):
         elif isinstance(criterion, date):
             pub_date = cls.Versioning.publication_date
             if pub_date:
-                return cls.objects.filter(**{pub_date + '__lte': criterion}).order('-vid')[0]
+                return cls.objects.filter(**{pub_date + '__lte': criterion}).order('-pk')[0]
             else:
                 raise ImproperlyConfigured("""Please specify which field counts as the publication
                     date for this model. You can do so inside a Versioning class. Read the docs 
@@ -81,7 +100,7 @@ class VersionedModel(models.Model):
             return revert_to_obj
             
     def get_latest_revision(self):
-        return self.get_revisions().order_by('-vid')[0]
+        return self.get_revisions().order_by('-pk')[0]
     
     def make_current_revision(self):
         if not self.check_if_latest_revision():
@@ -164,7 +183,8 @@ class VersionedModel(models.Model):
             # to clone a model in cases of concrete inheritance, you must
             # set both the self.pk reference and the actual primary key
             # to None
-            self.pk = self.vid = None
+            self.pk = None
+            setattr(self, self.pk_name, None)
         
         # The first revision of a piece of content won't have a bundle id yet, 
         # and because the object isn't persisted in the database, there's no 
@@ -176,10 +196,10 @@ class VersionedModel(models.Model):
         if not self.id:
             self.id = uuid.uuid4().hex
         
-        super(VersionedModel, self).save(*vargs, **kwargs)
+        super(VersionedModelBase, self).save(*vargs, **kwargs)
         
     def delete_revision(self, *vargs, **kwargs):
-        super(VersionedModel, self).delete(*vargs, **kwargs)
+        super(VersionedModelBase, self).delete(*vargs, **kwargs)
     
     def delete(self, *vargs, **kwargs):
         for revision in self.get_revisions():
@@ -191,6 +211,12 @@ class VersionedModel(models.Model):
     class Versioning:
         clear_each_revision = []
         publication_date = None
+
+class VersionedModel(VersionedModelBase):
+    vid = models.AutoField(primary_key=True)
+    
+    class Meta:
+        abstract = True
 
 class TrashableModel(models.Model):
     """ Users wanting a version history may also expect a trash bin

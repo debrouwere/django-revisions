@@ -23,7 +23,7 @@ class Story(VersionedModel):
         clear_each_revision = ['title', 'slug']
         publication_date = None
 
-class ConvenientStory(Story, shortcuts.VersionedModel):
+class ConvenientStory(Story, shortcuts.VersionedModelShortcuts):
     class Meta:
         proxy = True
 

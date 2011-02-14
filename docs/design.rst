@@ -11,7 +11,7 @@ There are a couple of different architectures in use that each do versioning in 
 
 * `MessageDB <http://github.com/thisismedium/message-db>`_ is a dedicated versioned data store.
 * A couple of systems use a version control system as the back-end for versioning, like `django-rcsfield <http://github.com/jezdez/django-rcsfield>`_ or the `Jekyll <http://github.com/mojombo/jekyll>`_ blog system.
-* `django-reversion <http://code.google.com/p/django-reversion/>`_ stores history in a serialized format (e.g. pickled, perhaps as a delta) on the model itself.
+* `django-reversion <https://github.com/etianen/django-reversion>`_ stores history in a serialized format (e.g. pickled, perhaps as a delta) on the model itself. This is the most popular choice right now.
 * `django-modelhistory <http://code.google.com/p/django-modelhistory/>`_ (inactive), `django-history <http://github.com/shreddawg/django-history>`_ (inactive), `django-history-tables <http://code.google.com/p/django-history-tables/>`_ (inactive), `AuditTrail <http://code.djangoproject.com/wiki/AuditTrail>`_ (inactive), `Audit <https://basieproject.org/stable/svn/basie/trunk/apps/audit/>`_ (inactive), `django-versioning <http://github.com/brosner/django-versioning>`_ all store model history in a different table from the model data itself -- often but not always pickled.
 * This app stores history is in the same database, in the same table(s), and unpickled: any version including the most recent one is stored in an identical format, plainly viewable in the database.
 

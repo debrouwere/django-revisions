@@ -136,6 +136,15 @@ The first priority is better documentation. After that, there are some features 
 
 * view version history and do diffs in the admin
 * a view wrapper or query shortcut that can handle redirecting to the latest revision when users stumble on outdated content (e.g. when a new revision has a different slug)
+* try to follow the `django-reversion` API wherever it makes sense, perhaps creating a ``shortcuts.ReversionModel`` model.
+
+Changelog
+=========
+
+* 0.4: Added a ``VersionedModelBase`` and removed all explicit references to ``vid`` as the primary key, to be able to support models regardless of whether their AutoField is named ``vid`` and regardless of whether it works with regular IDs, UUIDs et cetera. Changed the way you add in shortcuts. Use ``shortcuts.VersionedModel`` to get a versioned model _with_ shortcuts, or use both ``models.VersionedModel`` and ``shortcuts.VersionedModelShortcuts`` to stick to the old ways of doing things.
+* 0.3: Improved docs and added support for versioning on models with concrete inheritance.
+* 0.2: First public release. Added a lot of unit tests.
+* 0.1: First release.
 
 Indices and tables
 ==================

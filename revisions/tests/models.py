@@ -70,8 +70,8 @@ class TrashableStory(VersionedModel, TrashableModel):
     class Meta:
         verbose_name_plural = 'trashable stories'
 
-# this model allows us to test whether the versioning system also works
-# with inheritance (joined tables) as well as the TrashableModel functionality.
+# this model allows us to test whether the trash system works nicely in tandem
+# with revisions together with concrete inheritance
 @managers.trash_aware
 class FancyTrashableStory(TrashableStory):
     is_very_fancy = models.BooleanField(default=True)

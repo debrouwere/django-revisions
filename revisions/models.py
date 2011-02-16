@@ -269,7 +269,7 @@ class TrashableModel(models.Model):
             else:
                 obj.save()
     
-    def delete_permanently(self):
+    def delete_permanently(self):    
         for obj in self.get_content_bundle():
             super(TrashableModel, obj).delete()
     

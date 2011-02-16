@@ -138,7 +138,7 @@ class ModelTests(TestCase):
     def test_revisionform(self):
         raise NotImplementedError()
 
-class ConcreteInheritanceTests(ModelTests):
+class InheritanceTests(ModelTests):
     fixtures = ['revisions_scenario', 'fancy_revisions_scenario', 'asides_scenario']
     
     def setUp(self):
@@ -215,7 +215,7 @@ class ConvenienceTests(TestCase):
         self.assertEquals(regular.get_revisions()[1].title, short.revisions[1].title)
         self.assertNotEquals(regular.get_revisions()[1].title, short.revisions[2].title)
 
-class ConcreteInheritanceConvenienceTests(ConvenienceTests):
+class InheritanceConvenienceTests(ConvenienceTests):
     fixtures = ['revisions_scenario', 'fancy_revisions_scenario', 'asides_scenario']
     
     def setUp(self):
@@ -240,8 +240,8 @@ class TrashTests(TestCase):
         self.story.delete()
         self.assertRaises(self.story.__class__.DoesNotExist, 
             self.mgr.live.get,
-            id=story_id)
-        trashed_story = self.mgr.trash.get(id=story_id)
+            cid=story_id)
+        trashed_story = self.mgr.trash.get(cid=story_id)
         for story in trashed_story.get_revisions():
             self.assertTrue(story.is_trash)
 
@@ -250,7 +250,7 @@ class TrashTests(TestCase):
         self.story.delete_permanently()
         self.assertRaises(self.story.__class__.DoesNotExist, 
             self.mgr.get,
-            id=story_id)
+            cid=story_id)
 
 class InheritanceTrashTests(TrashTests):
     fixtures = ['trashable_scenario', 'fancy_trashable_scenario']

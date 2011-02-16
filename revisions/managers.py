@@ -51,7 +51,11 @@ class LatestManager(models.Manager):
         # to waive this concern.
 
         qs = super(LatestManager, self).get_query_set()
-        if inspect.stack()[3][3].startswith('save'):
+        stack = inspect.stack()[3][3]
+        # * 'save' for saving for plain models
+        # * 'save_base' for saving models with inheritance
+        # * '_collect_sub_objects' for deleting models with inheritance
+        if stack.startswith('save') or stack == '_collect_sub_objects':
             return qs
         else:
             return LatestManager.show_latest(qs)

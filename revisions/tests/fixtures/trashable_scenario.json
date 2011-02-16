@@ -6,7 +6,7 @@
             "body": "", 
             "slug": "flabbergasted", 
             "title": "Flabbergasted!", 
-            "id": "3b4dc60e76f540ecb4235710707751af", 
+            "cid": "3b4dc60e76f540ecb4235710707751af", 
             "_is_trash": false
         }
     },
@@ -17,7 +17,7 @@
             "body": "", 
             "slug": "flabbergasted-twice", 
             "title": "Flabbergasted! Twice!", 
-            "id": "3b4dc60e76f540ecb4235710707751af", 
+            "cid": "3b4dc60e76f540ecb4235710707751af", 
             "_is_trash": false
         }
     },
@@ -28,7 +28,7 @@
             "body": "", 
             "slug": "flabbergasted-thrice", 
             "title": "Flabbergasted! Thrice!", 
-            "id": "3b4dc60e76f540ecb4235710707751af", 
+            "cid": "3b4dc60e76f540ecb4235710707751af", 
             "_is_trash": false
         }
     }

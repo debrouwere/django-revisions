@@ -170,7 +170,7 @@ class VersionedModelBase(models.Model):
         specific to each revision, like a log message.
         """
         for field in self.Versioning.clear_each_revision:
-            super(VersionedModel, self).__setattr__(field, '')
+            super(VersionedModelBase, self).__setattr__(field, '')
     
     def save(self, new_revision=True, *vargs, **kwargs):
         # If we set the primary key (vid) to None, Django is smart
@@ -230,7 +230,7 @@ class TrashableModel(models.Model):
         return self._is_trash
     
     def get_content_bundle(self):
-        if isinstance(self, VersionedModel):
+        if isinstance(self, VersionedModelBase):
             return self.get_revisions()
         else:
             return [self]        
@@ -242,7 +242,7 @@ class TrashableModel(models.Model):
         """
         for obj in self.get_content_bundle():
             obj._is_trash = True
-            if isinstance(obj, VersionedModel):
+            if isinstance(obj, VersionedModelBase):
                 obj.save(new_revision=False)
             else:
                 obj.save()

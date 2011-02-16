@@ -10,14 +10,14 @@ from revisions.tests import models
 # App tests
 #
 
-class AppTests(TestCase):
+class ModelTests(TestCase):
     fixtures = ['revisions_scenario', 'asides_scenario']
 
     def setUp(self):
         self.story = models.Story.latest.all()[0]
 
     def test_get_revisions(self):
-        raise NotImplementedError
+        raise NotImplementedError()
     
     def test_get_next_revision(self):
         next = self.story.get_revisions().next
@@ -25,15 +25,15 @@ class AppTests(TestCase):
 
     def test_get_prev_revision(self):
         prev = self.story.get_revisions().prev
-        self.assertEquals(prev.vid, 2)
+        self.assertEquals(prev.pk, 2)
 
     def test_get_prev_next_revision(self):
-        revision_vid = self.story.vid
-        prevnext_vid = self.story.get_revisions().prev.get_revisions().next.vid
+        revision_vid = self.story.pk
+        prevnext_vid = self.story.get_revisions().prev.get_revisions().next.pk
         self.assertEquals(revision_vid, prevnext_vid)
 
     def test_id_assignment(self):
-        obj = models.Story(
+        obj = self.story.__class__(
             title = 'this is a title',
             body = 'this is some body text',
             )
@@ -50,7 +50,7 @@ class AppTests(TestCase):
         self.story.save()
         revision = self.story
         
-        self.assertTrue(base.vid < revision.vid)
+        self.assertTrue(base.pk < revision.pk)
         self.assertEquals(base.id, revision.id)
     
     def test_update_old_revision(self):
@@ -59,7 +59,7 @@ class AppTests(TestCase):
         old_rev.save()
         new = old_rev
         
-        self.assertTrue(base.vid < new.vid)
+        self.assertTrue(base.pk < new.pk)
     
     def test_update_old_revision_in_place(self):
         """ It should be possible to update an old revision without creating a 
@@ -86,10 +86,10 @@ class AppTests(TestCase):
             }
         
         actual = {
-            "old_revisions": [story for story in models.Story.latest.all() if not 
+            "old_revisions": [story for story in self.story.__class__.latest.all() if not 
                 story.check_if_latest_revision()],
-            "latest_revisions": models.Story.latest.all(),
-            "latest_revision_pks": set(models.Story.latest.values_list('pk', flat=True))       
+            "latest_revisions": self.story.__class__.latest.all(),
+            "latest_revision_pks": set(self.story.__class__.latest.values_list('pk', flat=True))       
             }
 
         self.assertEquals(len(expected['latest_revision_pks']), len(actual['latest_revisions']))
@@ -99,7 +99,7 @@ class AppTests(TestCase):
 
     def test_fetch(self):
         # TODO: test schrijven voor pk, date, datetime en het model zelf
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def test_revert_to(self):
         older_revision = self.story.get_revisions()[0]
@@ -113,7 +113,7 @@ class AppTests(TestCase):
         # does it actually revert?
         self.assertEquals(older_revision.body, reverted_revision.body)
         # reverting to an old revision works by making a new one
-        self.assertTrue(self.story.vid > older_revision.vid)
+        self.assertTrue(self.story.pk > older_revision.pk)
         self.assertTrue(revision_count < new_revision_count)
 
     def test_make_current_revision(self):
@@ -129,20 +129,32 @@ class AppTests(TestCase):
         self.assertNotEqual(latest_revision.title, new_latest_revision.title)
     
     def test_differ(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def test_clear_version_specific_fields(self):
         self.story.prepare_for_writing()
         self.assertEquals(self.story.slug, '')
     
     def test_revisionform(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
-class ConcreteInheritanceTests(AppTests):
+class ConcreteInheritanceTests(ModelTests):
     fixtures = ['revisions_scenario', 'fancy_revisions_scenario', 'asides_scenario']
     
     def setUp(self):
         self.story = models.FancyStory.latest.all()[0]    
+
+class BaseModelTests(ModelTests):
+    fixtures = ['basemodel_revisions_scenario', 'asides_scenario', ]
+    
+    def setUp(self):
+        self.story = models.ManualStory.latest.all()[0]        
+
+class FancyBaseModelTests(ModelTests):
+    fixtures = ['basemodel_fancy_revisions_scenario', 'asides_scenario', ]
+
+    def setUp(self):
+        self.story = models.FancyManualStory.latest.all()[0]
 
 class ConvenienceTests(TestCase):
     fixtures = ['revisions_scenario', 'asides_scenario']
@@ -217,7 +229,7 @@ class TrashTests(TestCase):
         self.mgr = models.TrashableStory._default_manager
     
     def test_publicmanager(self):
-        self.assertRaises(models.TrashableStory.DoesNotExist, 
+        self.assertRaises(self.story.__class__.DoesNotExist, 
             self.mgr.trash.get,
             pk=self.story.pk)
         self.assertTrue(self.mgr.live.get(pk=self.story.pk))
@@ -226,7 +238,7 @@ class TrashTests(TestCase):
         story_id = self.story.id
         
         self.story.delete()
-        self.assertRaises(models.TrashableStory.DoesNotExist, 
+        self.assertRaises(self.story.__class__.DoesNotExist, 
             self.mgr.live.get,
             id=story_id)
         trashed_story = self.mgr.trash.get(id=story_id)
@@ -236,10 +248,17 @@ class TrashTests(TestCase):
     def test_delete_permanently(self):
         story_id = self.story.id
         self.story.delete_permanently()
-        self.assertRaises(models.TrashableStory.DoesNotExist, 
+        self.assertRaises(self.story.__class__.DoesNotExist, 
             self.mgr.get,
             id=story_id)
-  
+
+class InheritanceTrashTests(TrashTests):
+    fixtures = ['trashable_scenario', 'fancy_trashable_scenario']
+    
+    def setUp(self):
+        self.story = models.FancyTrashableStory.latest.all()[0]
+        self.mgr = models.FancyTrashableStory._default_manager
+
 #
 # Browser tests
 #
@@ -294,12 +313,12 @@ class BrowserTests(TestCase):
     
     def test_frontend_redirects(self):
         # utils redirects testen in browser
-        raise NotImplementedError
+        raise NotImplementedError()
     
     def test_revisionform(self):
         # tests whether fields specified in Versioning.clear_each_revision
         # (e.g. 'title') are empty as they should be; 
-        # client-side counterpart to AppTests.test_revisionform
+        # client-side counterpart to ModelTests.test_revisionform
         
         response = self.c.get('/admin/tests/story/3/')
         self.assertContains(response, '<input id="id_title" type="text" class="vTextField" name="title" maxlength="250" />')

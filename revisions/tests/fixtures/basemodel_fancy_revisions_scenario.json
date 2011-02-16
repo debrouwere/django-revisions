@@ -1,0 +1,37 @@
+[
+    {
+        "pk": 1,
+        "model": "tests.fancymanualstory",
+        "fields": {
+            "is_very_fancy": false
+        }
+    },
+    {
+        "pk": 2,
+        "model": "tests.fancymanualstory",
+        "fields": {
+            "is_very_fancy": false
+        }
+    },
+    {
+        "pk": 3,
+        "model": "tests.fancymanualstory",
+        "fields": {
+            "is_very_fancy": true
+        }
+    },
+    {
+        "pk": 4,
+        "model": "tests.fancymanualstory",
+        "fields": {
+            "is_very_fancy": false
+        }
+    },
+    {
+        "pk": 5,
+        "model": "tests.fancymanualstory",
+        "fields": {
+            "is_very_fancy": false
+        }
+    }
+]

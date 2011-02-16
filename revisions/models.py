@@ -35,6 +35,19 @@ class VersionedModelBase(models.Model):
     def pk_name(self):
         return self.base_model._meta.pk.attname
 
+    # For UUIDs in particular, we need a way to know the order of revisions
+    # e.g. through a ``changed`` datetime field.
+    @property
+    def comparator_name(self):
+        if hasattr(self.Versioning, 'comparator'):
+            return self.Versioning.comparator
+        else:
+            return self.pk_name
+
+    @property
+    def comparator(self):
+        return getattr(self, self.comparator_name)
+
     @classmethod
     def get_implementations(cls):
         models = [contenttype.model_class() for contenttype in ContentType.objects.all()]
@@ -60,21 +73,21 @@ class VersionedModelBase(models.Model):
     
     # all related revisions, plus easy shortcuts to the previous and next revision
     def get_revisions(self):
-        qs = self.__class__.objects.filter(cid=self.cid).order_by('pk')
+        qs = self.__class__.objects.filter(cid=self.cid).order_by(self.comparator_name)
         
         try:
-            qs.prev = qs.filter(**{self.pk_name + '__lt': self.pk}).order_by('-pk')[0]
+            qs.prev = qs.filter(**{self.comparator_name + '__lt': self.comparator}).order_by('-' + self.comparator_name)[0]
         except IndexError:
             qs.prev = None
         try:
-            qs.next = qs.filter(**{self.pk_name + '__gt': self.pk})[0]
+            qs.next = qs.filter(**{self.comparator_name + '__gt': self.comparator})[0]
         except IndexError:
             qs.next = None
         
         return qs
     
     def check_if_latest_revision(self):
-        return self.pk >= max([version.pk for version in self.get_revisions()])
+        return self.comparator >= max([version.comparator for version in self.get_revisions()])
     
     @classmethod
     def fetch(cls, criterion):
@@ -85,7 +98,7 @@ class VersionedModelBase(models.Model):
         elif isinstance(criterion, date):
             pub_date = cls.Versioning.publication_date
             if pub_date:
-                return cls.objects.filter(**{pub_date + '__lte': criterion}).order('-pk')[0]
+                return cls.objects.filter(**{pub_date + '__lte': criterion}).order('-' + self.comparator_name)[0]
             else:
                 raise ImproperlyConfigured("""Please specify which field counts as the publication
                     date for this model. You can do so inside a Versioning class. Read the docs 
@@ -105,7 +118,7 @@ class VersionedModelBase(models.Model):
             return revert_to_obj
             
     def get_latest_revision(self):
-        return self.get_revisions().order_by('-pk')[0]
+        return self.get_revisions().order_by('-' + self.comparator)[0]
     
     def make_current_revision(self):
         if not self.check_if_latest_revision():

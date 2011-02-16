@@ -1,9 +1,5 @@
 # encoding: utf-8
 
-# TODO: we hebben een klein stukje middleware nodig om in de admin
-# te detecteren dat iemand een oude revisie probeert te editten (wat 
-# een 404 oplevert) en door te verwijzen naar de laatste VID
-
 # based on the FlatpageFallbackMiddleware
 
 from django.http import Http404

@@ -5,7 +5,7 @@
         "fields": {
             "body": "First revision.", 
             "slug": "this-is-a-little-story", 
-            "id": "d87049698dec4a519022c4aa20ac0184", 
+            "cid": "d87049698dec4a519022c4aa20ac0184", 
             "title": "This is a little story"
         }
     }, 
@@ -15,7 +15,7 @@
         "fields": {
             "body": "Second revision.", 
             "slug": "this-is-a-little-story", 
-            "id": "d87049698dec4a519022c4aa20ac0184", 
+            "cid": "d87049698dec4a519022c4aa20ac0184", 
             "title": "This is a little story"
         }
     }, 
@@ -25,7 +25,7 @@
         "fields": {
             "body": "Third and latest revision.", 
             "slug": "this-is-a-little-story-final", 
-            "id": "d87049698dec4a519022c4aa20ac0184", 
+            "cid": "d87049698dec4a519022c4aa20ac0184", 
             "title": "This is a little story (final)"
         }
     }, 
@@ -35,7 +35,7 @@
         "fields": {
             "body": "First rev.", 
             "slug": "this-is-a-second-story", 
-            "id": "3d218119da724cb1bb3cb8690085f84a", 
+            "cid": "3d218119da724cb1bb3cb8690085f84a", 
             "title": "This is a second story"
         }
     }, 
@@ -45,7 +45,7 @@
         "fields": {
             "body": "Second rev.", 
             "slug": "this-is-a-second-story", 
-            "id": "3d218119da724cb1bb3cb8690085f84a", 
+            "cid": "3d218119da724cb1bb3cb8690085f84a", 
             "title": "This is a second story"
         }
     }

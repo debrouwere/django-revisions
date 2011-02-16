@@ -42,8 +42,8 @@ class ModelTests(TestCase):
         saved_obj = obj
         
         # a piece of versioned content is only assigned a bundle id upon the first save
-        self.assertFalse(original_obj.id)
-        self.assertTrue(saved_obj.id)
+        self.assertFalse(original_obj.cid)
+        self.assertTrue(saved_obj.cid)
 
     def test_revision_creation(self):
         base = copy(self.story)
@@ -51,7 +51,7 @@ class ModelTests(TestCase):
         revision = self.story
         
         self.assertTrue(base.pk < revision.pk)
-        self.assertEquals(base.id, revision.id)
+        self.assertEquals(base.cid, revision.cid)
     
     def test_update_old_revision(self):
         old_rev = self.story.get_revisions()[1]
@@ -109,7 +109,7 @@ class ModelTests(TestCase):
         new_revision_count = len(self.story.get_revisions())
         
         # does the reverted revision keep the bundle id intact?
-        self.assertEquals(older_revision.id, self.story.id)
+        self.assertEquals(older_revision.cid, self.story.cid)
         # does it actually revert?
         self.assertEquals(older_revision.body, reverted_revision.body)
         # reverting to an old revision works by making a new one
@@ -151,7 +151,7 @@ class BaseModelTests(ModelTests):
         self.story = models.ManualStory.latest.all()[0]        
 
 class FancyBaseModelTests(ModelTests):
-    fixtures = ['basemodel_fancy_revisions_scenario', 'asides_scenario', ]
+    fixtures = ['basemodel_revisions_scenario', 'basemodel_fancy_revisions_scenario', 'asides_scenario', ]
 
     def setUp(self):
         self.story = models.FancyManualStory.latest.all()[0]
@@ -235,7 +235,7 @@ class TrashTests(TestCase):
         self.assertTrue(self.mgr.live.get(pk=self.story.pk))
     
     def test_delete_bundle(self):
-        story_id = self.story.id
+        story_id = self.story.cid
         
         self.story.delete()
         self.assertRaises(self.story.__class__.DoesNotExist, 
@@ -246,7 +246,7 @@ class TrashTests(TestCase):
             self.assertTrue(story.is_trash)
 
     def test_delete_permanently(self):
-        story_id = self.story.id
+        story_id = self.story.cid
         self.story.delete_permanently()
         self.assertRaises(self.story.__class__.DoesNotExist, 
             self.mgr.get,

@@ -26,9 +26,6 @@ class Story(VersionedModel):
 class ManualStory(VersionedModelBase):
     alt_id = models.IntegerField(primary_key=True)
 
-    class Meta:
-        abstract = True
-
     title = models.CharField(max_length=250)
     slug = models.SlugField(max_length=250, editable=False)
     body = models.TextField(blank=True)

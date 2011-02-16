@@ -10,6 +10,10 @@ from django.contrib.contenttypes.models import ContentType
 from revisions import managers
 import inspect
 
+# the crux of all errors seems to be that, with VersionedBaseModel, 
+# doing setattr(self, self.pk_name, None) does _not_ lead to creating
+# a new object, and thus versioning as a whole doesn't work
+
 # the only thing lacking from the VersionedModelBase is a version id.
 # You may use VersionedModelBase if you need to specify your own 
 # AutoField (e.g. using UUIDs) or if you're trying to adapt an existing
@@ -47,7 +51,8 @@ class VersionedModelBase(models.Model):
     def _base_table(self):
         return self._base_model._meta.db_table
 
-    id = models.CharField(max_length=36, editable=False, null=True, db_index=True)
+    # content bundle id
+    cid = models.CharField(max_length=36, editable=False, null=True, db_index=True)
     
     # managers
     latest = managers.LatestManager()
@@ -55,7 +60,7 @@ class VersionedModelBase(models.Model):
     
     # all related revisions, plus easy shortcuts to the previous and next revision
     def get_revisions(self):
-        qs = self.__class__.objects.filter(id=self.id).order_by('pk')
+        qs = self.__class__.objects.filter(cid=self.cid).order_by('pk')
         
         try:
             qs.prev = qs.filter(**{self.pk_name + '__lt': self.pk}).order_by('-pk')[0]
@@ -193,8 +198,8 @@ class VersionedModelBase(models.Model):
         # (Note for smart alecks: Django chokes on using super/save() more than
         # once in the save method, so doing a preliminary save to get the PK
         # and using that value for a bundle ID is rather hard.)
-        if not self.id:
-            self.id = uuid.uuid4().hex
+        if not self.cid:
+            self.cid = uuid.uuid4().hex
         
         super(VersionedModelBase, self).save(*vargs, **kwargs)
         

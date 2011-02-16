@@ -5,7 +5,7 @@
         "fields": {
             "message": "This aside is affixed to the first revision of the story.", 
             "story": 1, 
-            "id": "4ed62e7d17714ca39b148038f6211563"
+            "cid": "4ed62e7d17714ca39b148038f6211563"
         }
     }, 
     {
@@ -14,7 +14,7 @@
         "fields": {
             "message": "This aside is also affixed to the first revision of the story.", 
             "story": 1, 
-            "id": "276cdcf341f8457bb5cc62d95e5b3b75"
+            "cid": "276cdcf341f8457bb5cc62d95e5b3b75"
         }
     }, 
     {
@@ -23,7 +23,7 @@
         "fields": {
             "message": "This aside is affixed to the third revision of the story.", 
             "story": 3, 
-            "id": "79d99304fda940b094e5a9fde0233f7b"
+            "cid": "79d99304fda940b094e5a9fde0233f7b"
         }
     }, 
     {
@@ -32,7 +32,7 @@
         "fields": {
             "message": "This aside (rev 2) is affixed to the first revision of the story.", 
             "story": 1, 
-            "id": "4ed62e7d17714ca39b148038f6211563"
+            "cid": "4ed62e7d17714ca39b148038f6211563"
         }
     }, 
     {
@@ -41,7 +41,7 @@
         "fields": {
             "message": "This aside (rev 2) is also affixed to the first revision of the story.", 
             "story": 1, 
-            "id": "276cdcf341f8457bb5cc62d95e5b3b75"
+            "cid": "276cdcf341f8457bb5cc62d95e5b3b75"
         }
     }, 
     {
@@ -50,7 +50,7 @@
         "fields": {
             "message": "This aside (rev 2) is affixed to the third revision of the story.", 
             "story": 3, 
-            "id": "79d99304fda940b094e5a9fde0233f7b"
+            "cid": "79d99304fda940b094e5a9fde0233f7b"
         }
     },
     {

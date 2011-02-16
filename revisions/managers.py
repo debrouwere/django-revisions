@@ -21,7 +21,7 @@ class LatestManager(models.Manager):
         # but it sure as hell is the easiest way to do it in Django without resorting
         # to multiple queries or working entirely with raw SQL.
         version_id = base._meta.pk.attname
-        where = '{pk} = (SELECT MAX({pk}) FROM {table} as sub WHERE {table}.id = sub.id)'.format(
+        where = '{pk} = (SELECT MAX({pk}) FROM {table} as sub WHERE {table}.cid = sub.cid)'.format(
             table=base_table,
             pk=version_id)
         return qs.extra(where=[where])

@@ -89,7 +89,7 @@ class ModelTests(TestCase):
             "old_revisions": [story for story in self.story.__class__.latest.all() if not 
                 story.check_if_latest_revision()],
             "latest_revisions": self.story.__class__.latest.all(),
-            "latest_revision_pks": set(self.story.__class__.latest.values_list('pk', flat=True))       
+            "latest_revision_pks": set([story.pk for story in self.story.__class__.latest.only(self.story.pk_name).all()])       
             }
 
         self.assertEquals(len(expected['latest_revision_pks']), len(actual['latest_revisions']))

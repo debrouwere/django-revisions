@@ -20,10 +20,10 @@ class LatestManager(models.Manager):
         # piece of content, depending on how your database query optimizer works, 
         # but it sure as hell is the easiest way to do it in Django without resorting
         # to multiple queries or working entirely with raw SQL.
-        version_id = base._meta.pk.attname
-        where = '{pk} = (SELECT MAX({pk}) FROM {table} as sub WHERE {table}.cid = sub.cid)'.format(
+        comparator_name = base.get_comparator_name()     
+        where = '{comparator} = (SELECT MAX({comparator}) FROM {table} as sub WHERE {table}.cid = sub.cid)'.format(
             table=base_table,
-            pk=version_id)
+            comparator=comparator_name)
         return qs.extra(where=[where])
 
     def get_query_set(self):              

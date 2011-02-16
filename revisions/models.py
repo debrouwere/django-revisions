@@ -37,12 +37,16 @@ class VersionedModelBase(models.Model):
 
     # For UUIDs in particular, we need a way to know the order of revisions
     # e.g. through a ``changed`` datetime field.
+    @classmethod
+    def get_comparator_name(cls):
+        if hasattr(cls.Versioning, 'comparator'):
+            return cls.Versioning.comparator
+        else:
+            return cls.get_base_model()._meta.pk.attname
+
     @property
     def comparator_name(self):
-        if hasattr(self.Versioning, 'comparator'):
-            return self.Versioning.comparator
-        else:
-            return self.pk_name
+        return self.get_comparator_name()
 
     @property
     def comparator(self):

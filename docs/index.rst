@@ -141,6 +141,7 @@ The first priority is better documentation. After that, there are some features 
 Changelog
 =========
 
+* 0.5: Added support for ``unique`` and ``unique_together`` constraints at the bundle (as opposed to version) level. Improved support for UUID-based models and added tests to ascertain everything works as normal.
 * 0.4: Added a ``VersionedModelBase`` and removed all explicit references to ``vid`` as the primary key, to be able to support models regardless of whether their AutoField is named ``vid`` and regardless of whether it works with regular IDs, UUIDs et cetera. Changed the way you add in shortcuts. Use ``shortcuts.VersionedModel`` to get a versioned model _with_ shortcuts, or use both ``models.VersionedModel`` and ``shortcuts.VersionedModelShortcuts`` to stick to the old ways of doing things.
 * 0.3: Improved docs and added support for versioning on models with concrete inheritance.
 * 0.2: First public release. Added a lot of unit tests.

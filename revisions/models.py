@@ -236,7 +236,11 @@ class VersionedModelBase(models.Model):
             if len(unique_together) and isinstance(unique_together[0], basestring):
                 unique_together = (unique_together, )    
             return unique_together
-        unique_together = parse_shortcut(self.Versioning.unique_together) + parse_shortcut(self._meta.unique_together)
+        unique = [(name,) for unique_field in self.Versioning.unique]
+        unique_together = 
+            unique + 
+            parse_shortcut(self.Versioning.unique_together) + 
+            parse_shortcut(self._meta.unique_together)
         
         model = self.__class__()
         model._meta.unique_together = unique_together

@@ -74,6 +74,7 @@ class UniqueStory(VersionedModel):
         unique_together = ("title", "body", )
 
     class Versioning:
+        unique = ("body", )
         unique_together = ("title", "slug", )
 
     title = models.CharField(max_length=250)

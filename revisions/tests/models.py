@@ -68,6 +68,25 @@ class UUIDStory(VersionedModelBase):
         publication_date = None
         comparator = 'changed'
 
+class UniqueStory(VersionedModel):
+    class Meta:
+        verbose_name_plural = 'unique stories'
+        unique_together = ("title", "body", )
+
+    class Versioning:
+        unique_together = ("title", "slug", )
+
+    title = models.CharField(max_length=250)
+    slug = models.SlugField(max_length=250, editable=False)
+    body = models.TextField(blank=True)
+
+    def save(self, *vargs, **kwargs):
+        self.slug = slugify(self.title)
+        super(UniqueStory, self).save(*vargs, **kwargs)
+        
+    def __unicode__(self):
+        return self.title
+
 class FancyStory(Story):
     is_very_fancy = models.BooleanField(default=True)
 

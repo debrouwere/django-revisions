@@ -5,7 +5,8 @@ import difflib
 from datetime import date
 from django.db import models
 from django.utils.translation import ugettext as _
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.db import IntegrityError
 from django.contrib.contenttypes.models import ContentType
 from revisions import managers
 import inspect
@@ -205,6 +206,15 @@ class VersionedModelBase(models.Model):
         if not self.cid:
             self.cid = uuid.uuid4().hex
 
+        # uniqueness constraints per bundle can't be checked at the database level, 
+        # which means we'll have to do so in the save method
+        if self.Versioning.unique_together:
+            # replace ValidationError with IntegrityError because this is what users will expect
+            try:
+                self.validate_unique()
+            except ValidationError, error:
+                raise IntegrityError(error)
+
         # If we set the primary key (vid) to None, Django is smart
         # enough to save a new revision for us, instead of updating
         # the existing one.
@@ -219,6 +229,18 @@ class VersionedModelBase(models.Model):
             setattr(self, self.pk_name, None)
 
         super(VersionedModelBase, self).save(*vargs, **kwargs)
+
+    def _get_unique_checks(self, exclude=[]):
+        # for parity with Django's unique_together notation shortcut
+        def parse_shortcut(unique_together):
+            if len(unique_together) and isinstance(unique_together[0], basestring):
+                unique_together = (unique_together, )    
+            return unique_together
+        unique_together = parse_shortcut(self.Versioning.unique_together) + parse_shortcut(self._meta.unique_together)
+        
+        model = self.__class__()
+        model._meta.unique_together = unique_together
+        return models.Model._get_unique_checks(model, exclude)          
         
     def delete_revision(self, *vargs, **kwargs):
         super(VersionedModelBase, self).delete(*vargs, **kwargs)
@@ -233,6 +255,7 @@ class VersionedModelBase(models.Model):
     class Versioning:
         clear_each_revision = []
         publication_date = None
+        unique_together = ()
 
 class VersionedModel(VersionedModelBase):
     vid = models.AutoField(primary_key=True)

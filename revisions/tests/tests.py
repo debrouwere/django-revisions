@@ -1,5 +1,5 @@
 from copy import copy
-#from utils import TestCase
+from django.db import IntegrityError
 from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
@@ -172,6 +172,27 @@ class FancyBaseModelTests(ModelTests):
 
     def setUp(self):
         self.story = models.FancyManualStory.latest.all()[0]
+
+class UniquenessTests(TestCase):
+    def setUp(self):
+        self.story = models.UniqueStory(title="hello", body="there")
+        self.story.save()
+    
+    def test_per_version_unique_together(self):
+        self.assertRaises(IntegrityError, self.story.save)
+
+    def test_per_bundle_unique_together(self):
+        # shouldn't raise an error
+        self.story.title = "hola"
+        self.story.save()
+        # this shouldn't either, because title and slug are unique_together per bundle (see UniqueStory.Versioning)
+        story = models.UniqueStory(title="hey", slug="hey", body="there")
+        story.save()
+        story.body = "yonder"
+        story.save()
+        # and for that same reason, this new story _should_ raise an IntegrityError
+        new_story = models.UniqueStory(title="hey", slug="hey")
+        self.assertRaises(IntegrityError, new_story.save)      
 
 class ConvenienceTests(TestCase):
     fixtures = ['revisions_scenario', 'asides_scenario']

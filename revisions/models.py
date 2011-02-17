@@ -194,7 +194,17 @@ class VersionedModelBase(models.Model):
         for field in self.Versioning.clear_each_revision:
             super(VersionedModelBase, self).__setattr__(field, '')
     
-    def save(self, new_revision=True, *vargs, **kwargs):
+    def save(self, new_revision=True, *vargs, **kwargs):       
+        # The first revision of a piece of content won't have a bundle id yet, 
+        # and because the object isn't persisted in the database, there's no 
+        # primary key either, so we use a UUID as the bundle ID.
+        # 
+        # (Note for smart alecks: Django chokes on using super/save() more than
+        # once in the save method, so doing a preliminary save to get the PK
+        # and using that value for a bundle ID is rather hard.)
+        if not self.cid:
+            self.cid = uuid.uuid4().hex
+
         # If we set the primary key (vid) to None, Django is smart
         # enough to save a new revision for us, instead of updating
         # the existing one.
@@ -207,17 +217,7 @@ class VersionedModelBase(models.Model):
             # to None
             self.pk = None
             setattr(self, self.pk_name, None)
-        
-        # The first revision of a piece of content won't have a bundle id yet, 
-        # and because the object isn't persisted in the database, there's no 
-        # primary key either, so we use a UUID as the bundle ID.
-        # 
-        # (Note for smart alecks: Django chokes on using super/save() more than
-        # once in the save method, so doing a preliminary save to get the PK
-        # and using that value for a bundle ID is rather hard.)
-        if not self.cid:
-            self.cid = uuid.uuid4().hex
-        
+
         super(VersionedModelBase, self).save(*vargs, **kwargs)
         
     def delete_revision(self, *vargs, **kwargs):

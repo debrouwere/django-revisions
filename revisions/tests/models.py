@@ -3,6 +3,7 @@ from revisions.models import VersionedModelBase, VersionedModel, TrashableModel
 from revisions import shortcuts
 from django.template.defaultfilters import slugify
 from revisions import managers
+from django_extensions.db.fields import UUIDField
 
 class Story(VersionedModel):
     title = models.CharField(max_length=250)
@@ -24,7 +25,7 @@ class Story(VersionedModel):
         publication_date = None
 
 class ManualStory(VersionedModelBase):
-    alt_id = models.IntegerField(primary_key=True)
+    alt_id = models.AutoField(primary_key=True)
 
     title = models.CharField(max_length=250)
     slug = models.SlugField(max_length=250, editable=False)
@@ -43,6 +44,29 @@ class ManualStory(VersionedModelBase):
     class Versioning:
         clear_each_revision = ['title', 'slug']
         publication_date = None
+
+class UUIDStory(VersionedModelBase):
+    alt_id = UUIDField(primary_key=True)
+
+    title = models.CharField(max_length=250)
+    slug = models.SlugField(max_length=250, editable=False)
+    body = models.TextField(blank=True)
+    changed = models.DateTimeField(auto_now=True)
+
+    def save(self, *vargs, **kwargs):
+        self.slug = slugify(self.title)
+        super(UUIDStory, self).save(*vargs, **kwargs)
+        
+    def __unicode__(self):
+        return self.title
+    
+    class Meta:
+        verbose_name_plural = 'uuid-based stories'
+    
+    class Versioning:
+        clear_each_revision = ['title', 'slug']
+        publication_date = None
+        comparator = 'changed'
 
 class FancyStory(Story):
     is_very_fancy = models.BooleanField(default=True)

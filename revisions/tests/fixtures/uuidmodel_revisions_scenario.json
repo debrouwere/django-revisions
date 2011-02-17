@@ -1,0 +1,52 @@
+[
+    {
+        "pk": "abc", 
+        "model": "tests.uuidstory", 
+        "fields": {
+            "body": "First revision.", 
+            "slug": "this-is-a-little-story", 
+            "cid": "d87049698dec4a519022c4aa20ac0184", 
+            "title": "This is a little story"
+        }
+    }, 
+    {
+        "pk": "def", 
+        "model": "tests.uuidstory", 
+        "fields": {
+            "body": "Second revision.", 
+            "slug": "this-is-a-little-story", 
+            "cid": "d87049698dec4a519022c4aa20ac0184", 
+            "title": "This is a little story"
+        }
+    }, 
+    {
+        "pk": "ghi", 
+        "model": "tests.uuidstory", 
+        "fields": {
+            "body": "Third and latest revision.", 
+            "slug": "this-is-a-little-story-final", 
+            "cid": "d87049698dec4a519022c4aa20ac0184", 
+            "title": "This is a little story (final)"
+        }
+    }, 
+    {
+        "pk": "aaa", 
+        "model": "tests.uuidstory", 
+        "fields": {
+            "body": "First rev.", 
+            "slug": "this-is-a-second-story", 
+            "cid": "3d218119da724cb1bb3cb8690085f84a", 
+            "title": "This is a second story"
+        }
+    }, 
+    {
+        "pk": "bbb", 
+        "model": "tests.uuidstory", 
+        "fields": {
+            "body": "Second rev.", 
+            "slug": "this-is-a-second-story", 
+            "cid": "3d218119da724cb1bb3cb8690085f84a", 
+            "title": "This is a second story"
+        }
+    }
+]

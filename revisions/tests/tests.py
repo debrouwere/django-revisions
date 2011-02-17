@@ -23,9 +23,9 @@ class ModelTests(TestCase):
         next = self.story.get_revisions().next
         self.assertEquals(next, None)
 
-    def test_get_prev_revision(self):
+    def test_get_prev_revision(self, prev_pk=2):
         prev = self.story.get_revisions().prev
-        self.assertEquals(prev.pk, 2)
+        self.assertEquals(prev.pk, prev_pk)
 
     def test_get_prev_next_revision(self):
         revision_vid = self.story.pk
@@ -50,7 +50,7 @@ class ModelTests(TestCase):
         self.story.save()
         revision = self.story
         
-        self.assertTrue(base.pk < revision.pk)
+        self.assertTrue(base.comparator < revision.comparator)
         self.assertEquals(base.cid, revision.cid)
     
     def test_update_old_revision(self):
@@ -59,7 +59,7 @@ class ModelTests(TestCase):
         old_rev.save()
         new = old_rev
         
-        self.assertTrue(base.pk < new.pk)
+        self.assertTrue(base.comparator < new.comparator)
     
     def test_update_old_revision_in_place(self):
         """ It should be possible to update an old revision without creating a 
@@ -75,15 +75,16 @@ class ModelTests(TestCase):
         
         self.assertEquals(revision_count['before'], revision_count['after'])
         
-    def test_latest_manager(self):
+    def test_latest_manager(self, expected=None):
         """ The latest manager should only display the latest revision
         for each content bundle. """
         
         # see fixtures
-        expected = {
-            "old_revision_pks": set([1,2,4]),
-            "latest_revision_pks": set([3,5]),
-            }
+        if not expected:
+            expected = {
+                "old_revision_pks": set([1,2,4]),
+                "latest_revision_pks": set([3,5]),
+                }
         
         actual = {
             "old_revisions": [story for story in self.story.__class__.latest.all() if not 
@@ -91,7 +92,7 @@ class ModelTests(TestCase):
             "latest_revisions": self.story.__class__.latest.all(),
             "latest_revision_pks": set([story.pk for story in self.story.__class__.latest.only(self.story.pk_name).all()])       
             }
-
+        
         self.assertEquals(len(expected['latest_revision_pks']), len(actual['latest_revisions']))
         self.assertEquals(expected['latest_revision_pks'], actual['latest_revision_pks'])
         self.assertEquals(actual['latest_revisions'][0].title, 'This is a little story (final)')
@@ -113,7 +114,7 @@ class ModelTests(TestCase):
         # does it actually revert?
         self.assertEquals(older_revision.body, reverted_revision.body)
         # reverting to an old revision works by making a new one
-        self.assertTrue(self.story.pk > older_revision.pk)
+        self.assertTrue(self.story.comparator > older_revision.comparator)
         self.assertTrue(revision_count < new_revision_count)
 
     def test_make_current_revision(self):
@@ -150,6 +151,22 @@ class BaseModelTests(ModelTests):
     def setUp(self):
         self.story = models.ManualStory.latest.all()[0]        
 
+class UUIDModelTests(ModelTests):
+    fixtures = ['uuidmodel_revisions_scenario', 'asides_scenario', ]
+    
+    def setUp(self):
+        self.story = models.UUIDStory.latest.all()[0]
+
+    def test_get_prev_revision(self):
+        super(UUIDModelTests, self).test_get_prev_revision("def")
+
+    def test_latest_manager(self):
+        expected = {
+            "old_revision_pks": set(["abc","def","aaa"]),
+            "latest_revision_pks": set(["ghi","bbb"]),
+            }
+        super(UUIDModelTests, self).test_latest_manager(expected)   
+
 class FancyBaseModelTests(ModelTests):
     fixtures = ['basemodel_revisions_scenario', 'basemodel_fancy_revisions_scenario', 'asides_scenario', ]
 
@@ -171,7 +188,7 @@ class ConvenienceTests(TestCase):
         # We test out three ways of doing the same thing. 
         # All three should behave identically.
         related_manager = self.story.aside_set
-        revision_pks = self.story.get_revisions().values_list('pk', flat=True)
+        revision_pks = [rev.pk for rev in self.story.get_revisions().only(self.story.comparator_name).all()]
         asides = related_manager
         total_asides = self.story._get_related_objects(related_manager)
         total_asides_alt = models.Aside.latest.filter(story__in=revision_pks)

@@ -54,8 +54,9 @@ class LatestManager(models.Manager):
         stack = inspect.stack()[3][3]
         # * 'save' for saving for plain models
         # * 'save_base' for saving models with inheritance
-        # * '_collect_sub_objects' for deleting models with inheritance
-        if stack.startswith('save') or stack == '_collect_sub_objects':
+        # * '_collect_sub_objects' for deleting models with inheritance (Django 1.2)
+        # * 'collect' for deleting models with inheritance (Django 1.3
+        if stack.startswith('save') or stack == 'collect' or stack == '_collect_sub_objects':
             return qs
         else:
             return LatestManager.show_latest(qs)

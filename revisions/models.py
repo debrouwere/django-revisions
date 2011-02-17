@@ -236,10 +236,13 @@ class VersionedModelBase(models.Model):
             if len(unique_together) and isinstance(unique_together[0], basestring):
                 unique_together = (unique_together, )    
             return unique_together
-        unique = [(name,) for unique_field in self.Versioning.unique]
-        unique_together = 
-            unique + 
-            parse_shortcut(self.Versioning.unique_together) + 
+        
+        # Django actually checks uniqueness for a single field in the very same way it
+        # does things for unique_together, something we happily take advantage of
+        unique = tuple([(field,) for field in self.Versioning.unique])
+        unique_together = \
+            unique + \
+            parse_shortcut(self.Versioning.unique_together) + \
             parse_shortcut(self._meta.unique_together)
         
         model = self.__class__()

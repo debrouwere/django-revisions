@@ -186,13 +186,19 @@ class UniquenessTests(TestCase):
         self.story.title = "hola"
         self.story.save()
         # this shouldn't either, because title and slug are unique_together per bundle (see UniqueStory.Versioning)
-        story = models.UniqueStory(title="hey", slug="hey", body="there")
+        story = models.UniqueStory(title="hey", slug="hey", body="you")
         story.save()
         story.body = "yonder"
         story.save()
         # and for that same reason, this new story _should_ raise an IntegrityError
         new_story = models.UniqueStory(title="hey", slug="hey")
         self.assertRaises(IntegrityError, new_story.save)      
+
+    def test_per_bundle_unique(self):
+        # body is unique per bundle, and we've used "there" before, 
+        # so this won't work
+        new_story = models.UniqueStory(title="howdy", body="there")
+        self.assertRaises(IntegrityError, new_story.save)
 
 class ConvenienceTests(TestCase):
     fixtures = ['revisions_scenario', 'asides_scenario']

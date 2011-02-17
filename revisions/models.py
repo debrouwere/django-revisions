@@ -208,7 +208,7 @@ class VersionedModelBase(models.Model):
 
         # uniqueness constraints per bundle can't be checked at the database level, 
         # which means we'll have to do so in the save method
-        if self.Versioning.unique_together:
+        if getattr(self.Versioning, 'unique_together', None) or getattr(self.Versioning, 'unique', None):
             # replace ValidationError with IntegrityError because this is what users will expect
             try:
                 self.validate_unique()
@@ -239,11 +239,11 @@ class VersionedModelBase(models.Model):
         
         # Django actually checks uniqueness for a single field in the very same way it
         # does things for unique_together, something we happily take advantage of
-        unique = tuple([(field,) for field in self.Versioning.unique])
+        unique = tuple([(field,) for field in getattr(self.Versioning, 'unique', ())])
         unique_together = \
             unique + \
-            parse_shortcut(self.Versioning.unique_together) + \
-            parse_shortcut(self._meta.unique_together)
+            parse_shortcut(getattr(self.Versioning, 'unique_together', ())) + \
+            parse_shortcut(getattr(self._meta, 'unique_together', ()))
         
         model = self.__class__()
         model._meta.unique_together = unique_together

@@ -200,6 +200,16 @@ class UniquenessTests(TestCase):
         new_story = models.UniqueStory(title="howdy", body="there")
         self.assertRaises(IntegrityError, new_story.save)
 
+class ForeignKeyTests(TestCase):
+    fixtures = ['revisions_scenario', ]
+    
+    def setUp(self):
+        self.story = models.Story.latest.all()[0]
+    
+    def test_foreign_key_to_bundle(self):
+        info = models.InfoToBundle(content="Something something.", story=self.story)
+        info.save() 
+
 class ConvenienceTests(TestCase):
     fixtures = ['revisions_scenario', 'asides_scenario']
 

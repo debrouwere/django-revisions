@@ -132,3 +132,8 @@ class Info(models.Model):
     # serves to test related but unversioned objects
     content = models.CharField(max_length=250)
     story = models.ForeignKey(Story)
+
+class InfoToBundle(models.Model):
+    # serves to test FKs to a bundle
+    content = models.CharField(max_length=250)
+    story = models.ForeignKey(Story, to_field='cid')

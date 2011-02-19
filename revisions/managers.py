@@ -50,12 +50,12 @@ class LatestManager(models.Manager):
         # and work on related resources and in the admin without any fuss, leading us
         # to waive this concern.
 
-        qs = super(LatestManager, self).get_query_set()
+        qs = super(LatestManager, self).get_query_set()        
         stack = inspect.stack()[3][3]
         # * 'save' for saving for plain models
         # * 'save_base' for saving models with inheritance
         # * '_collect_sub_objects' for deleting models with inheritance (Django 1.2)
-        # * 'collect' for deleting models with inheritance (Django 1.3
+        # * 'collect' for deleting models with inheritance (Django 1.3)
         if stack.startswith('save') or stack == 'collect' or stack == '_collect_sub_objects':
             return qs
         else:

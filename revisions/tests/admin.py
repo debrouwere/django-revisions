@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from revisions.tests import models
-from revisions.admin import RevisionForm
+from revisions.admin import VersionedAdmin, RevisionForm
 
 class AsideInline(admin.TabularInline):
     model = models.Aside
@@ -10,7 +10,7 @@ class AsideInline(admin.TabularInline):
 class InfoInline(admin.TabularInline):
     model = models.Info
 
-class StoryAdmin(admin.ModelAdmin):
+class StoryAdmin(VersionedAdmin):
     form = RevisionForm
     inlines = [AsideInline, InfoInline,]
 

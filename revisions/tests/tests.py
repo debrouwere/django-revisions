@@ -16,8 +16,10 @@ class ModelTests(TestCase):
     def setUp(self):
         self.story = models.Story.latest.all()[0]
 
-    def test_get_revisions(self):
-        raise NotImplementedError()
+    def test_get_revisions(self, pks=[1,2,3]):
+        revisions = self.story.get_revisions()
+        self.assertEquals(len(revisions), 3)
+        self.assertEquals([rev.pk for rev in revisions], pks)
     
     def test_get_next_revision(self):
         next = self.story.get_revisions().next
@@ -46,18 +48,13 @@ class ModelTests(TestCase):
         self.assertTrue(saved_obj.cid)
 
     def test_revision_creation(self):
-        base = copy(self.story)
-        self.story.save()
-        revision = self.story
-        
-        self.assertTrue(base.comparator < revision.comparator)
-        self.assertEquals(base.cid, revision.cid)
+        revision = self.story.revise()  
+        self.assertTrue(self.story.comparator < revision.comparator)
+        self.assertEquals(self.story.cid, revision.cid)
     
     def test_update_old_revision(self):
-        old_rev = self.story.get_revisions()[1]
-        base = copy(old_rev)
-        old_rev.save()
-        new = old_rev
+        base = self.story.get_revisions()[1]
+        new = base.revise()
         
         self.assertTrue(base.comparator < new.comparator)
     
@@ -70,7 +67,7 @@ class ModelTests(TestCase):
             }
         old_rev = self.story.get_revisions()[1]
         old_rev.title = 'Fiddling around with an old revision'
-        old_rev.save(new_revision=False)
+        old_rev.save()
         revision_count['after'] = self.story.get_revisions().count()
         
         self.assertEquals(revision_count['before'], revision_count['after'])
@@ -98,15 +95,15 @@ class ModelTests(TestCase):
         self.assertEquals(actual['latest_revisions'][0].title, 'This is a little story (final)')
         self.assertTrue(expected['old_revision_pks'].isdisjoint(actual['latest_revision_pks']))
 
-    def test_fetch(self):
-        # TODO: test schrijven voor pk, date, datetime en het model zelf
-        raise NotImplementedError()
+    def test_fetch_by_pk(self, pk=2):
+        story = self.story.__class__.fetch(pk)
+        self.assertEquals(story.pk, pk)
 
     def test_revert_to(self):
         older_revision = self.story.get_revisions()[0]
         revision_count = len(self.story.get_revisions())
         reverted_revision = self.story.revert_to(older_revision)
-        self.story.save()
+        self.story.revise()
         new_revision_count = len(self.story.get_revisions())
         
         # does the reverted revision keep the bundle id intact?
@@ -128,16 +125,10 @@ class ModelTests(TestCase):
         # test te doen slagen -- anders heeft het geen zin
         self.assertEquals(older_revision.title, new_latest_revision.title)
         self.assertNotEqual(latest_revision.title, new_latest_revision.title)
-    
-    def test_differ(self):
-        raise NotImplementedError()
 
     def test_clear_version_specific_fields(self):
         self.story.prepare_for_writing()
         self.assertEquals(self.story.slug, '')
-    
-    def test_revisionform(self):
-        raise NotImplementedError()
 
 class InheritanceTests(ModelTests):
     fixtures = ['revisions_scenario', 'fancy_revisions_scenario', 'asides_scenario']
@@ -156,6 +147,12 @@ class UUIDModelTests(ModelTests):
     
     def setUp(self):
         self.story = models.UUIDStory.latest.all()[0]
+
+    def test_fetch_by_pk(self):
+        super(UUIDModelTests, self).test_fetch_by_pk("def")
+
+    def test_get_revisions(self):
+        super(UUIDModelTests, self).test_get_revisions(["abc", "def", "ghi"])
 
     def test_get_prev_revision(self):
         super(UUIDModelTests, self).test_get_prev_revision("def")
@@ -179,17 +176,17 @@ class UniquenessTests(TestCase):
         self.story.save()
     
     def test_per_version_unique_together(self):
-        self.assertRaises(IntegrityError, self.story.save)
+        self.assertRaises(IntegrityError, self.story.revise)
 
     def test_per_bundle_unique_together(self):
         # shouldn't raise an error
         self.story.title = "hola"
-        self.story.save()
+        self.story.revise()
         # this shouldn't either, because title and slug are unique_together per bundle (see UniqueStory.Versioning)
         story = models.UniqueStory(title="hey", slug="hey", body="you")
         story.save()
         story.body = "yonder"
-        story.save()
+        story.revise()
         # and for that same reason, this new story _should_ raise an IntegrityError
         new_story = models.UniqueStory(title="hey", slug="hey")
         self.assertRaises(IntegrityError, new_story.save)      

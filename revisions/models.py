@@ -8,7 +8,7 @@ from django.utils.translation import ugettext as _
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import IntegrityError
 from django.contrib.contenttypes.models import ContentType
-from revisions import managers
+from revisions import managers, utils
 import inspect
 
 # the crux of all errors seems to be that, with VersionedBaseModel, 
@@ -20,7 +20,8 @@ import inspect
 # AutoField (e.g. using UUIDs) or if you're trying to adapt an existing
 # model to ``django-revisions`` and have an AutoField not named
 # ``vid``.
-class VersionedModelBase(models.Model):        
+
+class VersionedModelBase(models.Model, utils.ClonableMixin):
     @classmethod
     def get_base_model(cls):
         base = cls
@@ -75,7 +76,7 @@ class VersionedModelBase(models.Model):
     # managers
     latest = managers.LatestManager()
     objects = models.Manager()
-    
+
     # all related revisions, plus easy shortcuts to the previous and next revision
     def get_revisions(self):
         qs = self.__class__.objects.filter(cid=self.cid).order_by(self.comparator_name)
@@ -96,7 +97,7 @@ class VersionedModelBase(models.Model):
     
     @classmethod
     def fetch(cls, criterion):
-        if isinstance(criterion, int):
+        if isinstance(criterion, int) or isinstance(criterion, str):
             return cls.objects.get(pk=criterion)
         elif isinstance(criterion, models.Model):
             return criterion
@@ -119,8 +120,7 @@ class VersionedModelBase(models.Model):
         if revert_to_obj.pk not in self.get_revisions().values_list('pk', flat=True):
             raise IndexError("Cannot revert to a primary key that is not part of the content bundle.")
         else:
-            revert_to_obj.save()
-            return revert_to_obj
+            return revert_to_obj.revise()
             
     def get_latest_revision(self):
         return self.get_revisions().order_by('-' + self.comparator)[0]
@@ -134,6 +134,25 @@ class VersionedModelBase(models.Model):
         to = unicode(getattr(to, field)).split()
         differ = difflib.HtmlDiff()
         return differ.make_table(frm, to)
+
+    def _get_unique_checks(self, exclude=[]):
+        # for parity with Django's unique_together notation shortcut
+        def parse_shortcut(unique_together):
+            if len(unique_together) and isinstance(unique_together[0], basestring):
+                unique_together = (unique_together, )    
+            return unique_together
+        
+        # Django actually checks uniqueness for a single field in the very same way it
+        # does things for unique_together, something we happily take advantage of
+        unique = tuple([(field,) for field in getattr(self.Versioning, 'unique', ())])
+        unique_together = \
+            unique + \
+            parse_shortcut(getattr(self.Versioning, 'unique_together', ())) + \
+            parse_shortcut(getattr(self._meta, 'unique_together', ()))
+        
+        model = self.__class__()
+        model._meta.unique_together = unique_together
+        return models.Model._get_unique_checks(model, exclude)          
 
     def _get_attribute_history(self, name):
         if self.__dict__.get(name, False):
@@ -194,8 +213,22 @@ class VersionedModelBase(models.Model):
         """
         for field in self.Versioning.clear_each_revision:
             super(VersionedModelBase, self).__setattr__(field, '')
-    
-    def save(self, new_revision=True, *vargs, **kwargs):       
+
+    def validate_bundle(self):
+        # uniqueness constraints per bundle can't be checked at the database level, 
+        # which means we'll have to do so in the save method
+        if getattr(self.Versioning, 'unique_together', None) or getattr(self.Versioning, 'unique', None):
+            # replace ValidationError with IntegrityError because this is what users will expect
+            try:
+                self.validate_unique()
+            except ValidationError, error:
+                raise IntegrityError(error)
+
+    def revise(self):
+        self.validate_bundle()
+        return self.clone()
+
+    def save(self, *vargs, **kwargs):       
         # The first revision of a piece of content won't have a bundle id yet, 
         # and because the object isn't persisted in the database, there's no 
         # primary key either, so we use a UUID as the bundle ID.
@@ -206,48 +239,8 @@ class VersionedModelBase(models.Model):
         if not self.cid:
             self.cid = uuid.uuid4().hex
 
-        # uniqueness constraints per bundle can't be checked at the database level, 
-        # which means we'll have to do so in the save method
-        if getattr(self.Versioning, 'unique_together', None) or getattr(self.Versioning, 'unique', None):
-            # replace ValidationError with IntegrityError because this is what users will expect
-            try:
-                self.validate_unique()
-            except ValidationError, error:
-                raise IntegrityError(error)
-
-        # If we set the primary key (vid) to None, Django is smart
-        # enough to save a new revision for us, instead of updating
-        # the existing one.
-        # 
-        # We don't make a new revision for small changes.
-        if new_revision and not getattr(self, 'is_small_change', False):
-            # little known Django implementation detail: 
-            # to clone a model in cases of concrete inheritance, you must
-            # set both the self.pk reference and the actual primary key
-            # to None
-            self.pk = None
-            setattr(self, self.pk_name, None)
-
+        self.validate_bundle()
         super(VersionedModelBase, self).save(*vargs, **kwargs)
-
-    def _get_unique_checks(self, exclude=[]):
-        # for parity with Django's unique_together notation shortcut
-        def parse_shortcut(unique_together):
-            if len(unique_together) and isinstance(unique_together[0], basestring):
-                unique_together = (unique_together, )    
-            return unique_together
-        
-        # Django actually checks uniqueness for a single field in the very same way it
-        # does things for unique_together, something we happily take advantage of
-        unique = tuple([(field,) for field in getattr(self.Versioning, 'unique', ())])
-        unique_together = \
-            unique + \
-            parse_shortcut(getattr(self.Versioning, 'unique_together', ())) + \
-            parse_shortcut(getattr(self._meta, 'unique_together', ()))
-        
-        model = self.__class__()
-        model._meta.unique_together = unique_together
-        return models.Model._get_unique_checks(model, exclude)          
         
     def delete_revision(self, *vargs, **kwargs):
         super(VersionedModelBase, self).delete(*vargs, **kwargs)
@@ -255,7 +248,7 @@ class VersionedModelBase(models.Model):
     def delete(self, *vargs, **kwargs):
         for revision in self.get_revisions():
             revision.delete_revision(*vargs, **kwargs)
-    
+
     class Meta:
         abstract = True
     
@@ -294,10 +287,7 @@ class TrashableModel(models.Model):
         """
         for obj in self.get_content_bundle():
             obj._is_trash = True
-            if isinstance(obj, VersionedModelBase):
-                obj.save(new_revision=False)
-            else:
-                obj.save()
+            obj.save()
     
     def delete_permanently(self):    
         for obj in self.get_content_bundle():

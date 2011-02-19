@@ -136,4 +136,4 @@ class Info(models.Model):
 class InfoToBundle(models.Model):
     # serves to test FKs to a bundle
     content = models.CharField(max_length=250)
-    story = models.ForeignKey(Story, to_field='cid')
+    #story = models.ForeignKey(Story, to_field='cid')

@@ -5,6 +5,12 @@ from django.db import models
 import inspect
 
 
+class LatestQuerySet(models.query.QuerySet):
+    # not too nice performance-wise, but the easiest solution
+    # to make counts play nice with revisions
+    def count(self):
+        return len(list(self.iterator()))
+        
 
 class LatestManager(models.Manager):
     """ A manager that returns the latest revision of each bundle of content. """
@@ -14,7 +20,7 @@ class LatestManager(models.Manager):
     
     @property
     def latest(self):
-        qs = super(LatestManager, self).get_query_set()
+        qs = LatestQuerySet(self.model, using=self._db)
     
         # in case of concrete inheritance, we need the base table, not the leaf
         base = qs.query.model.get_base_model()
@@ -65,9 +71,7 @@ class LatestManager(models.Manager):
             return super(LatestManager, self).get_query_set()
         else:
             return self.latest
-    
-    def count(self):
-        return len(self.get_query_set())
+            
     
 def trash_aware(cls):
     for manager in cls._meta.abstract_managers:

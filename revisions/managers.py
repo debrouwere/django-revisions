@@ -4,14 +4,18 @@ from datetime import datetime
 from django.db import models
 import inspect
 
+
+
 class LatestManager(models.Manager):
     """ A manager that returns the latest revision of each bundle of content. """
     # use_for_related_fields makes sure this manager works
     # seamlessly with inline formsets
     use_for_related_fields = True
     
-    @classmethod
-    def show_latest(cls, qs):
+    @property
+    def latest(self):
+        qs = super(LatestManager, self).get_query_set()
+    
         # in case of concrete inheritance, we need the base table, not the leaf
         base = qs.query.model.get_base_model()
         base_table = base._meta.db_table
@@ -24,7 +28,9 @@ class LatestManager(models.Manager):
         where = '{comparator} = (SELECT MAX({comparator}) FROM {table} as sub WHERE {table}.cid = sub.cid)'.format(
             table=base_table,
             comparator=comparator_name)
-        return qs.extra(where=[where])
+        
+        qs = qs.extra(where=[where])
+        return qs
 
     def get_query_set(self):              
         # Django uses the default manager (which on versioned models is this one)
@@ -49,18 +55,20 @@ class LatestManager(models.Manager):
         # ... but we feel that versioning should be an absolutely transparant concern, 
         # and work on related resources and in the admin without any fuss, leading us
         # to waive this concern.
-
-        qs = super(LatestManager, self).get_query_set()        
+   
         stack = inspect.stack()[3][3]
         # * 'save' for saving for plain models
         # * 'save_base' for saving models with inheritance
         # * '_collect_sub_objects' for deleting models with inheritance (Django 1.2)
         # * 'collect' for deleting models with inheritance (Django 1.3)
         if stack.startswith('save') or stack == 'collect' or stack == '_collect_sub_objects':
-            return qs
+            return super(LatestManager, self).get_query_set()
         else:
-            return LatestManager.show_latest(qs)
-
+            return self.latest
+    
+    def count(self):
+        return len(self.get_query_set())
+    
 def trash_aware(cls):
     for manager in cls._meta.abstract_managers:
         manager[2].trash = manager[2].filter(_is_trash=True)

@@ -138,6 +138,7 @@ class VersionedModelBase(models.Model, utils.ClonableMixin):
     def _get_unique_checks(self, exclude=[]):
         # for parity with Django's unique_together notation shortcut
         def parse_shortcut(unique_together):
+            unique_together = tuple(unique_together)
             if len(unique_together) and isinstance(unique_together[0], basestring):
                 unique_together = (unique_together, )    
             return unique_together

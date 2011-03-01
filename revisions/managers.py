@@ -26,7 +26,7 @@ class LatestManager(models.Manager):
     use_for_related_fields = True
     
     @property
-    def latest(self):
+    def current(self):
         qs = LatestQuerySet(self.model, using=self._db)
     
         # in case of concrete inheritance, we need the base table, not the leaf
@@ -79,7 +79,7 @@ class LatestManager(models.Manager):
         if stack.startswith('save') or stack == 'collect' or stack == '_collect_sub_objects':
             return super(LatestManager, self).get_query_set()
         else:
-            return self.latest
+            return self.current
             
     
 def trash_aware(cls):

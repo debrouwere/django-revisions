@@ -5,6 +5,13 @@ from django.db import models
 import inspect
 
 
+def get_table_for_field(model, field_name):
+    for field in model._meta.fields:
+        if field_name == field.attname:
+            return field.model._meta.db_table
+    return None
+
+
 class LatestQuerySet(models.query.QuerySet):
     # not too nice performance-wise, but the easiest solution
     # to make counts play nice with revisions
@@ -30,10 +37,12 @@ class LatestManager(models.Manager):
         # piece of content, depending on how your database query optimizer works, 
         # but it sure as hell is the easiest way to do it in Django without resorting
         # to multiple queries or working entirely with raw SQL.
-        comparator_name = base.get_comparator_name()     
-        where = '{comparator} = (SELECT MAX({comparator}) FROM {table} as sub WHERE {table}.cid = sub.cid)'.format(
+        comparator_name = base.get_comparator_name()  
+        comparator_table = get_table_for_field(qs.query.model, comparator_name)
+        where = '{comparator_table}.{comparator} = (SELECT MAX({comparator}) FROM {table} as sub WHERE {table}.cid = sub.cid)'.format(
             table=base_table,
-            comparator=comparator_name)
+            comparator=comparator_name,
+            comparator_table=comparator_table)
         
         qs = qs.extra(where=[where])
         return qs

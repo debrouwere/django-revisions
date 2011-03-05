@@ -31,6 +31,11 @@ The models and API work with both single-table models and `joined tables <http:/
 
 See :doc:`models` for more detail.
 
+Specifying your own primary key
+-------------------------------
+
+* working with UUIDs; comparators -- e.g. a "created" date (but beware of programmatical creation, resulting in multiple objects with the same created date and thus no canonical "latest" revision)
+
 Admin integration
 -----------------
     

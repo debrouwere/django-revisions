@@ -21,10 +21,7 @@ class LatestQuerySet(models.query.QuerySet):
 
 class LatestManager(models.Manager):
     """ A manager that returns the latest revision of each bundle of content. """
-    # use_for_related_fields makes sure this manager works
-    # seamlessly with inline formsets
-    use_for_related_fields = True
-    
+
     @property
     def current(self):
         qs = LatestQuerySet(self.model, using=self._db)

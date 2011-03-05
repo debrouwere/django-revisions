@@ -1,0 +1,30 @@
+# query
+
+where = '{comparator_table}.{comparator} = (SELECT MAX({comparator}) FROM {table} as sub WHERE {table}.cid = sub.cid)'
+
+# optimized query
+
+where = '{comparator_table}.{pk} IN {comparator_table}_latest_revisions'
+
+# in the code
+
+    # optimize by default
+    if not getattr(settings, 'OPTIMIZE_REVISIONS', True):
+        where
+    else:
+        optimized_where
+
+# post-syncdb
+
+for model in versioned_models:
+    base = model.get_base_model()
+    table = base._meta.db_table + "_latest_revisions"
+    pk = model().pk_name
+    latest = str(model.latest.only(pk).query)
+    sql = "CREATE OR REPLACE VIEW {table} AS {selection}".format(
+        table=table,
+        selection=latest
+        )
+
+# NOTE TO SELF: create a script that enters ~20k records into a DB and test performance before committing this
+# If this still isn't fast enough, we could actually go for a real, indexed  table, but then we have to take care of keeping the _latest_revisions table in sync with the real table, which isn't rocket science but which I'd rather avoid.
